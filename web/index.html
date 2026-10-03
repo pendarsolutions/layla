@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لیلا</title>
+<meta name="description" content="لیلا متن فارسی را می‌خواند و به پرسش‌های شما درباره‌اش پاسخ می‌دهد.">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/vazirmatn-arabic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="site.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="tb-start">
+    <a class="tb-brand" href="#/" aria-label="لیلا، صفحهٔ اول"></a>
+    <nav class="tb-nav" aria-label="بخش‌ها">
+      <a href="#/api" data-route="api">API</a>
+      <a href="#/docs" data-route="docs">مستندات</a>
+      <a href="#/services" data-route="services">خدمات</a>
+    </nav>
+  </div>
+  <div class="tb-end" id="tb-account"></div>
+</header>
+<div class="app" data-view="home" data-route-view="play">
+  <main class="stage">
+    <section class="home" aria-label="شروع">
+      <h1 class="sr">لیلا</h1>
+      <div class="logo-wrap"><svg class="logo" viewBox="450 310 1200 1061" role="img" aria-label="لیلا">
+
+<polygon points="650.0,950.0 1550.0,950.0 1450.0,1050.0 550.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="550.0,510.0 650.0,410.0 650.0,950.0 550.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="900.0,510.0 1000.0,410.0 1000.0,950.0 900.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1450.0,510.0 1550.0,410.0 1550.0,950.0 1450.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1123.2,865.0 1201.1,820.0 1333.9,1050.0 1230.0,1050.0" fill="currentColor"/>
+<polyline points="1276.2,950.0 1201.1,820.0 1123.2,865.0 1230.0,1050.0 1333.9,1050.0" fill="none" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="989.0,1149.0 1050.0,1210.0 989.0,1271.0 928.0,1210.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1111.0,1149.0 1172.0,1210.0 1111.0,1271.0 1050.0,1210.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+</svg></div>
+      <form class="composer" autocomplete="off">
+        <label class="sr" for="home-input">متن</label>
+        <textarea id="home-input" rows="1" placeholder="متنی فارسی بنویسید یا بچسبانید…"></textarea>
+        <div class="tools">
+          <button class="out-btn" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="label">خروجی‌ها</span><span class="count">۳</span></button>
+          <button class="send" type="submit" aria-label="بفرست" disabled></button>
+        </div>
+      </form>
+      <div class="suggest" id="suggest"></div>
+      <p class="credit">قدرت‌گرفته از پندار</p>
+    </section>
+    <div class="thread">
+      <button class="mini-logo" id="home-link" type="button" aria-label="بازگشت به صفحهٔ اول" title="صفحهٔ اول"><svg class="logo" viewBox="450 310 1200 1061" role="img" aria-label="لیلا">
+
+<polygon points="650.0,950.0 1550.0,950.0 1450.0,1050.0 550.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="550.0,510.0 650.0,410.0 650.0,950.0 550.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="900.0,510.0 1000.0,410.0 1000.0,950.0 900.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1450.0,510.0 1550.0,410.0 1550.0,950.0 1450.0,1050.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1123.2,865.0 1201.1,820.0 1333.9,1050.0 1230.0,1050.0" fill="currentColor"/>
+<polyline points="1276.2,950.0 1201.1,820.0 1123.2,865.0 1230.0,1050.0 1333.9,1050.0" fill="none" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="989.0,1149.0 1050.0,1210.0 989.0,1271.0 928.0,1210.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+<polygon points="1111.0,1149.0 1172.0,1210.0 1111.0,1271.0 1050.0,1210.0" fill="currentColor" stroke="var(--mist)" stroke-width="3.5" stroke-linejoin="miter" stroke-miterlimit="12"/>
+</svg></button>
+      <div id="turns"></div>
+    </div>
+  </main>
+  <div class="dock">
+    <div class="inner">
+      <form class="composer" autocomplete="off">
+        <label class="sr" for="dock-input">متن بعدی</label>
+        <textarea id="dock-input" rows="1" placeholder="متن بعدی…"></textarea>
+        <div class="tools">
+          <button class="out-btn" type="button" aria-haspopup="dialog" aria-expanded="false"><span class="label">خروجی‌ها</span><span class="count">۳</span></button>
+          <button class="send" type="submit" aria-label="بفرست" disabled></button>
+        </div>
+      </form>
+      <p class="credit">قدرت‌گرفته از پندار</p>
+    </div>
+  </div>
+</div>
+<section class="page page-api" data-route-view="api" hidden><div class="page-body"></div><p class="page-credit">قدرت‌گرفته از پندار</p></section>
+<section class="page page-docs" data-route-view="docs" hidden><div class="page-body"></div><p class="page-credit">قدرت‌گرفته از پندار</p></section>
+<section class="page page-services" data-route-view="services" hidden><div class="page-body"></div><p class="page-credit">قدرت‌گرفته از پندار</p></section>
+<section class="page page-login" data-route-view="login" hidden><div class="page-body"></div><p class="page-credit">قدرت‌گرفته از پندار</p></section>
+<section class="page page-keys" data-route-view="keys" hidden><div class="page-body"></div><p class="page-credit">قدرت‌گرفته از پندار</p></section>
+<div class="scrim" id="scrim" data-open="false"></div>
+<div class="picker" id="picker" role="dialog" aria-modal="false" aria-labelledby="picker-title" data-open="false" inert></div>
+<div class="toast" id="toast" role="alert" data-open="false"></div>
+<script src="app.js"></script>
+<script src="site.js"></script>
+</body>
+</html>

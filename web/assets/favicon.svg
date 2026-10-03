@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img" aria-label="Layla">
+  <title>Layla</title>
+  <rect width="32" height="32" rx="7" fill="#F7F5F1"/>
+  <g fill="none" stroke-linecap="butt" stroke-linejoin="round">
+    <path stroke="#2B2926" stroke-width="2.8" d="M7 29 V14.15 A3.6 3.6 0 0 1 7.276923 12.765385 A20.365244 20.365244 0 0 1 16 2.9 A20.365244 20.365244 0 0 1 24.723077 12.765385 A3.6 3.6 0 0 1 25 14.15 V29"/>
+    <path stroke="#3E5C76" stroke-width="3" d="M11.5 29 V21.575 A1.8 1.8 0 0 1 11.638462 20.882692 A10.182622 10.182622 0 0 1 16 15.95 A10.182622 10.182622 0 0 1 20.361538 20.882692 A1.8 1.8 0 0 1 20.5 21.575 V29"/>
+  </g>
+</svg>

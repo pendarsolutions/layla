@@ -1,0 +1,68 @@
+# Layla API + its Postgres — single-server deployment (staging / temporary production on a SHARED host).
+# The limits below are what keep Layla from starving the other services on the machine.
+services:
+  layla-api:
+    image: layla-api:${LAYLA_VERSION:?set LAYLA_VERSION in .env}
+    build:
+      context: .
+      args:
+        LAYLA_VERSION: ${LAYLA_VERSION}
+        LAYLA_GIT_SHA: ${LAYLA_GIT_SHA:-unknown}
+    container_name: layla-api
+    env_file: .env
+    environment:
+      LAYLA_MODEL_PATH: /models/layla-1.0
+      LAYLA_DATABASE_URL: postgresql+psycopg://layla:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@layla-db:5432/layla
+      OMP_NUM_THREADS: ${LAYLA_THREADS:-6}
+    depends_on:
+      layla-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${LAYLA_HOST_PORT:-8790}:8000"   # localhost only; nginx or an SSH tunnel in front
+    volumes:
+      - ${LAYLA_MODEL_DIR:-./models/layla-1.0}:/models/layla-1.0:ro
+    # --- resource guard rails for a shared host ---
+    cpus: ${LAYLA_CPUS:-6}          # hard ceiling: at most half of a 12-vCPU box
+    cpu_shares: 256                  # under contention the other services win (default is 1024)
+    mem_limit: 3000m                 # model ≈1.3 GB; measured idle 1.8-2.4 GB after warm-up
+    memswap_limit: 3000m             # no swap: fail fast instead of thrashing the host
+    oom_score_adj: 800               # if the host runs out of memory, Layla goes first
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  layla-db:
+    image: postgres:16.4-alpine
+    container_name: layla-db
+    environment:
+      POSTGRES_DB: layla
+      POSTGRES_USER: layla
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - layla-db-data:/var/lib/postgresql/data
+    # no published port: only layla-api reaches it, on the compose network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U layla -d layla"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    cpus: 0.5
+    cpu_shares: 256
+    mem_limit: 256m
+    memswap_limit: 256m
+    oom_score_adj: 700
+    shm_size: 64m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  layla-db-data:

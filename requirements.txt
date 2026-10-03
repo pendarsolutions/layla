@@ -1,0 +1,15 @@
+# torch is installed separately in the Dockerfile from the CPU wheel index (torch==2.14.0+cpu).
+fastapi==0.123.5
+starlette==0.50.0
+uvicorn==0.38.0
+pydantic==2.12.5
+transformers==5.9.0
+safetensors==0.7.0
+huggingface_hub==1.16.1
+numpy==2.4.4
+# accounts
+SQLAlchemy==2.0.51
+alembic==1.16.5
+psycopg[binary]==3.3.4
+PyJWT[crypto]==2.10.1
+cryptography==50.0.1
