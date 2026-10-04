@@ -1,9 +1,9 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { Icon } from "@pendar/ui";
-import { CodeSample, Decision, LaylaFooter, LaylaWordmark, Playground, QUESTION_TYPES, SERVICES, type DecisionStatus } from "@pendar/layla";
+import { CodeSample, Decision, LaylaFooter, LaylaWordmark, QUESTION_TYPES, SERVICES, type DecisionStatus } from "@pendar/layla";
 import { COPY, type Lang } from "../copy.ts";
 import { API, PUBLIC_API } from "../lib/api.ts";
-import { runLayla } from "../pages/Play.tsx";
+import { Chat } from "../chat/Chat.tsx";
 import { HeaderEnd, navLinks } from "../Shell.tsx";
 import { setupLanding } from "./motion.ts";
 import { Sky } from "./Sky.tsx";
@@ -248,10 +248,8 @@ export function Landing({ lang, onLang }: { lang: Lang; onLang: () => void }) {
           <div className="l-live-inner">
             <div className="l-live-head">
               <h2 id="l-live-title" className="l-h2">{c.live.title}</h2>
-              <p className="l-p">{c.live.body}</p>
-              <p className="l-live-limits">{c.live.limits}</p>
             </div>
-            <Playground run={runLayla} maxChars={4000} />
+            <Chat lang={lang} variant="embed" />
           </div>
         </section>
         <LaylaFooter />

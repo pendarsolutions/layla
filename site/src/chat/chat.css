@@ -1,0 +1,356 @@
+/* The chat: Layla's playground, on its own page and in the landing's live box (Chat.tsx). */
+.c-chat {
+  --c-width: 46rem;
+  display: grid;
+  color: var(--color-ink-default);
+}
+.c-log {
+  min-height: 0;
+}
+.c-empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.c-empty-title {
+  margin: 0;
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1.5;
+  text-wrap: balance;
+}
+.c-turns {
+  display: grid;
+  gap: 28px;
+  max-width: var(--c-width);
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+.c-turn {
+  display: grid;
+  gap: 14px;
+}
+
+/* Your text: a bubble on the far side (the left in Persian). */
+.c-user {
+  justify-self: end;
+  max-width: min(85%, 36rem);
+  animation: c-rise var(--duration-slow) var(--ease-enter);
+}
+.c-user p {
+  margin: 0;
+  padding: 11px 16px;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-sunken);
+  font-size: 16px;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Layla's reply: no words of its own, only the answers. Its mark: the two lapis dots of «ی». */
+.c-reply {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+}
+.c-avatar {
+  display: flex;
+  gap: 3px;
+  padding-top: 20px;
+}
+.c-avatar i {
+  width: 9px;
+  height: 9px;
+  background: var(--color-product-500);
+}
+.c-answers {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-raised);
+  list-style: none;
+}
+.c-ans + .c-ans {
+  border-top: 1px solid var(--color-line-default);
+}
+.c-ans-head {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.c-ans-head:disabled {
+  cursor: default;
+}
+.c-ans-head:hover:not(:disabled) {
+  background: var(--color-surface-sunken);
+}
+.c-ans-icon {
+  display: grid;
+  color: var(--color-accent-default);
+}
+.c-ans-title {
+  overflow: hidden;
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.c-ans-value {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.c-ans[data-state="done"] .c-ans-value {
+  animation: c-rise var(--duration-slow) var(--ease-enter);
+}
+.c-ans-label {
+  font-size: 16px;
+  font-weight: 800;
+}
+.c-unsure {
+  padding: 0 6px;
+  border: 1px dashed var(--color-line-control);
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.c-none {
+  color: var(--color-ink-muted);
+}
+.c-wait {
+  display: block;
+  width: 72px;
+  height: 8px;
+  border-radius: var(--radius-control);
+  background: var(--color-surface-sunken);
+}
+.c-opts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0 14px 12px;
+  padding-inline-start: 44px;
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  list-style: none;
+}
+.c-opts li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.c-meta,
+.c-note {
+  margin: 8px 2px 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.c-error {
+  margin: 8px 2px 0;
+  color: var(--color-danger-text);
+  font-size: 14px;
+}
+.c-retry {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-ink-action);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+@media (max-width: 520px) {
+  .c-ans-head {
+    grid-template-columns: 20px minmax(0, 1fr);
+  }
+  .c-ans-value {
+    grid-column: 2;
+  }
+}
+
+/* The composer: one box that grows with the text; what it asks sits behind a chip. */
+.c-dock {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: var(--c-width);
+  margin: 0 auto;
+}
+.c-composer {
+  display: grid;
+  gap: 6px;
+  padding: 12px 12px 10px;
+  border: 1px solid var(--color-line-control);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-raised);
+  box-shadow: 0 14px 36px -24px rgb(33 39 89 / 0.45);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+.c-composer:focus-within {
+  border-color: var(--color-accent-default);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-accent-default) 16%, transparent),
+    0 14px 36px -24px rgb(33 39 89 / 0.45);
+}
+.c-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  max-height: 220px;
+  padding: 4px 6px;
+  overflow-y: auto;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 17px;
+  line-height: 1.8;
+  resize: none;
+}
+.c-input::placeholder {
+  color: var(--color-ink-muted);
+}
+.c-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.c-questions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-sunken);
+  color: var(--color-ink-muted);
+  font: 600 13px/1.6 var(--font-sans);
+  cursor: pointer;
+}
+.c-questions:hover {
+  border-color: var(--color-line-control);
+  color: var(--color-ink-default);
+}
+.c-left {
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.c-send {
+  margin-inline-start: auto;
+}
+.c-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.c-chip {
+  padding: 6px 12px;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--color-ink-default);
+  font: 500 14px/1.5 var(--font-sans);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-quick) var(--ease-standard),
+    color var(--duration-quick) var(--ease-standard);
+}
+.c-chip:hover {
+  border-color: var(--color-accent-default);
+  color: var(--color-accent-strong);
+}
+.c-restart {
+  display: inline-flex;
+  align-items: center;
+  justify-self: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 0;
+  background: none;
+  color: var(--color-ink-muted);
+  font: 13px/1.6 var(--font-sans);
+  cursor: pointer;
+}
+.c-restart:hover {
+  color: var(--color-ink-default);
+}
+
+/* On its own page: centred until the first text; then the answers above, the box held at the bottom. */
+.c-page.is-empty {
+  align-content: center;
+  gap: 28px;
+  min-height: calc(100svh - 300px);
+}
+.c-page.has-turns .c-log {
+  padding-bottom: 24px;
+}
+/* Brought into view above the held box, not behind it. */
+.c-page .c-end {
+  scroll-margin-bottom: 180px;
+}
+.c-page.has-turns .c-dock {
+  position: sticky;
+  bottom: 0;
+  padding: 16px 0 18px;
+  background: linear-gradient(to top, var(--color-surface-page) 72%, transparent);
+}
+
+/* In the landing's live box: a panel that scrolls inside itself. */
+.c-embed {
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 16px;
+  height: min(76svh, 720px);
+  padding: clamp(14px, 2vw, 24px);
+  box-sizing: border-box;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-page);
+  box-shadow: 0 30px 80px -50px rgb(33 39 89 / 0.5);
+}
+/* Until the first text, the panel is only as tall as its title and box. */
+.c-embed.is-empty {
+  grid-template-rows: auto auto;
+  align-content: center;
+  gap: 24px;
+  height: auto;
+  padding-block: clamp(36px, 6vw, 64px);
+}
+.c-embed .c-log {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 4px 2px 8px;
+}
+
+@keyframes c-rise {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .c-user,
+  .c-ans[data-state="done"] .c-ans-value {
+    animation: none;
+  }
+}

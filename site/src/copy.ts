@@ -20,7 +20,24 @@ export interface Copy {
   speed: { title: string; body: string; under: string; number: number; unit: string };
   sectors: { title: string; body: string; try: string };
   dev: { title: string; body: string; key: string; docs: string };
-  live: { title: string; body: string; limits: string };
+  live: { title: string };
+  chat: {
+    empty: string;
+    placeholder: string;
+    send: string;
+    stop: string;
+    questions: (n: number) => string;
+    questionsTitle: string;
+    yours: string;
+    done: string;
+    meta: (n: number, ms: number) => string;
+    left: (n: number) => string;
+    retry: string;
+    restart: string;
+    you: string;
+    layla: string;
+    errors: Record<string, string>;
+  };
   pages: {
     play: { title: string; lead: string };
     services: { title: string; lead: string };
@@ -52,6 +69,8 @@ const RESULTS: Result[] = [
   result({ id: "cancel", type: "yes_no", answer: "yes", label: "بله", probability: 0.79, options: [opt("yes", "بله", 0.79), opt("no", "نه", 0.21)] }),
   result({ id: "urgency", type: "scale", answer: "1", label: "مهم", probability: 0.58, level: 1, options: [opt("0", "عادی", 0.12), opt("1", "مهم", 0.58), opt("2", "فوری", 0.3)] }),
 ];
+
+const faNum = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
 
 const SUPPORT_TEXT = "سلام، سه روز است سفارشم را ثبت کرده‌ام و هنوز خبری نیست. اگر تا فردا نرسد لغوش می‌کنم و پولم را می‌خواهم.";
 
@@ -101,10 +120,29 @@ const fa: Copy = {
     key: "کلید بسازید",
     docs: "مستندات",
   },
-  live: {
-    title: "خودتان امتحان کنید",
-    body: "بی‌ثبت‌نام. متنی بنویسید یا یکی از نمونه‌ها را بردارید.",
-    limits: "در این صفحه، هر متن تا ۴٬۰۰۰ نویسه و هر دقیقه تا ۳۰ درخواست.",
+  live: { title: "خودتان امتحان کنید" },
+  chat: {
+    empty: "متنی بفرستید تا لیلا بخواند.",
+    placeholder: "متنی فارسی بنویسید یا بچسبانید…",
+    send: "بفرستید",
+    stop: "بس کنید",
+    questions: (n) => `${faNum(n)} پرسش`,
+    questionsTitle: "پرسش‌ها",
+    yours: "پرسش خودتان",
+    done: "انجام شد",
+    meta: (n, ms) => `${faNum(n)} پاسخ در ${faNum(Math.max(0.1, Math.round(ms / 100) / 10))} ثانیه`,
+    left: (n) => `${faNum(n)} نویسه مانده`,
+    retry: "دوباره بفرستید",
+    restart: "گفت‌وگوی تازه",
+    you: "شما",
+    layla: "لیلا",
+    errors: {
+      network: "به لیلا وصل نشد. اتصال را بررسی کنید.",
+      rate_limited: "درخواست‌ها زیاد شد. کمی بعد دوباره بفرستید.",
+      busy: "لیلا الان مشغول است. کمی بعد دوباره بفرستید.",
+      text_too_long: "متن بلندتر از حد این صفحه است.",
+      default: "این بار پاسخی نرسید.",
+    },
   },
   pages: {
     play: { title: "صفحهٔ آزمایش", lead: "متنی بنویسید، پرسش‌هایتان را انتخاب کنید و بفرستید؛ پاسخ‌ها همان لحظه که آماده شوند می‌رسند." },
@@ -168,10 +206,29 @@ const en: Copy = {
     key: "Create a key",
     docs: "Docs",
   },
-  live: {
-    title: "Try it yourself",
-    body: "No sign-up. Write a Persian text, or pick one of the examples.",
-    limits: "On this page, each text up to 4,000 characters and up to 30 requests a minute.",
+  live: { title: "Try it yourself" },
+  chat: {
+    empty: "Send a Persian text for Layla to read.",
+    placeholder: "Write or paste a Persian text…",
+    send: "Send",
+    stop: "Stop",
+    questions: (n) => `${n} question${n === 1 ? "" : "s"}`,
+    questionsTitle: "Questions",
+    yours: "Your own question",
+    done: "Done",
+    meta: (n, ms) => `${n} answer${n === 1 ? "" : "s"} in ${Math.max(0.1, Math.round(ms / 100) / 10)} s`,
+    left: (n) => `${n} characters left`,
+    retry: "Send again",
+    restart: "New chat",
+    you: "You",
+    layla: "Layla",
+    errors: {
+      network: "Couldn't reach Layla. Check your connection.",
+      rate_limited: "Too many requests. Send again in a little while.",
+      busy: "Layla is busy right now. Send again in a little while.",
+      text_too_long: "The text is longer than this page allows.",
+      default: "No answer came this time.",
+    },
   },
   pages: {
     play: { title: "Playground", lead: "Write a text, choose your questions and send; each answer arrives the moment it's ready." },

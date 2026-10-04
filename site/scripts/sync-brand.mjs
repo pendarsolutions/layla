@@ -8,7 +8,7 @@ const token = process.env.SPECIMEN_TOKEN ?? readFileSync(join(homedir(), ".speci
 const get = async (path) => {
   for (let i = 1; ; i++) {
     try {
-      const res = await fetch("https://specimen.karefun.ai/api/v1/brands/layla/assets/" + path + "/file", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("https://specimen.ariaashrafi.com/api/v1/brands/layla/assets/" + path + "/file", { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) throw new Error(`${res.status} ${path}`);
       return Buffer.from(await res.arrayBuffer());
     } catch (e) {

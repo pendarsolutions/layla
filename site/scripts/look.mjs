@@ -66,6 +66,21 @@ if (flags.has("run")) {
   await live.screenshot({ path: join(out, `L-${tag}-run.png`) });
   console.log("answers:", await live.evaluate((el) => el.innerText.match(/[۰-۹0-9]+٪|[0-9]+%/g)?.join(" ")));
 }
+if (flags.has("chat")) {
+  // The chat: a screenshot empty, then send the first suggestion and wait for Layla's answers.
+  const scope = hash === "-" ? page.locator("#try") : page.locator("main");
+  await scope.scrollIntoViewIfNeeded();
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: join(out, `L-${tag}-chat-empty.png`) });
+  await scope.locator(".c-chip").first().click();
+  await page.waitForTimeout(9000);
+  await page.screenshot({ path: join(out, `L-${tag}-chat-answered.png`) });
+  await scope.locator(".c-input").fill("غذا خیلی دیر رسید و سرد بود. دیگه از این رستوران سفارش نمی‌دم.");
+  await scope.locator(".c-input").press("Enter");
+  await page.waitForTimeout(9000);
+  await page.screenshot({ path: join(out, `L-${tag}-chat-second.png`) });
+  console.log("answers:", await scope.evaluate((el) => el.innerText.match(/[۰-۹0-9]+٪|[0-9]+%/g)?.join(" ")));
+}
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].join("\n"));
 await browser.close();
 server.close();
