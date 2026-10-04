@@ -32,9 +32,11 @@
   gap: 14px;
 }
 
-/* Your text: a bubble on the far side (the left in Persian). */
+/* Your text: a bubble at the start of reading (the right in Persian), lined up over Layla's answers
+   (past the avatar's 26px column and its 10px gap). */
 .c-user {
-  justify-self: end;
+  justify-self: start;
+  margin-inline-start: 36px;
   max-width: min(85%, 36rem);
   animation: c-rise var(--duration-slow) var(--ease-enter);
 }
