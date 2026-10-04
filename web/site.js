@@ -5,7 +5,7 @@
   const P = window.LaylaPlay;
   const { el, fa } = P;
   const API = P.api;
-  const BASE = API || location.origin;               // what code samples call
+  const BASE = /^https?:/.test(API) ? API : location.origin + API;   // what code samples call
   const $ = (s, r = document) => r.querySelector(s);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)");
   const ICON = {
@@ -226,8 +226,8 @@ results.forEach((x) => console.log(x.id, x.label, x.probability));`],
       body.replaceChildren(
         el("header", { class: "page-head" },
           el("div", {}, el("h1", {}, "API لیلا"),
-            el("p", { class: "lede" }, "لیلا را در محصول خودتان به کار ببرید: متن را بفرستید و پاسخ هر پرسش را با احتمالش، در قالب JSON بگیرید.")),
-          getKey),
+            el("p", { class: "lede" }, "لیلا را در محصول خودتان به کار ببرید: متن را بفرستید و پاسخ هر پرسش را با احتمالش، در قالب JSON بگیرید."),
+            el("div", { class: "head-actions" }, getKey))),
         el("ul", { class: "facts" },
           el("li", {}, el("b", {}, `${fa(100)} درخواست رایگان`), el("span", {}, "برای هر حساب، بدون کارت بانکی")),
           el("li", {}, el("b", {}, "پاسخ یک‌جا یا جریانی"), el("span", {}, "هر پاسخ همان لحظه که آماده شد می‌رسد")),

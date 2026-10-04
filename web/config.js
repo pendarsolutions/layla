@@ -5,4 +5,5 @@ if (location.port === "5500") {  // legacy: page served separately; the site now
   window.LAYLA_API = window.LAYLA_API || "http://127.0.0.1:8790";
   window.LAYLA_TIMING = true;
 }
-window.LAYLA_API = window.LAYLA_API || "";
+// Same origin by default, under the folder this page was loaded from ("/layla" for https://example.com/layla/).
+window.LAYLA_API = window.LAYLA_API || location.pathname.replace(/\/[^/]*$/, "");
