@@ -19,6 +19,8 @@ fi
 ssh "$HOST" SHA="$SHA" VERSION="$VERSION" bash -s <<'REMOTE'
 set -euo pipefail
 mkdir -p ~/layla-api/models && cd ~/layla-api
+# web/ is built and committed whole: clear it so files the new site no longer has don't linger.
+rm -rf web
 tar xzf "/tmp/layla-api-$SHA.tgz" && rm "/tmp/layla-api-$SHA.tgz"
 test -f models/layla-1.0/model.safetensors || { echo "model missing in ~/layla-api/models/layla-1.0" >&2; exit 1; }
 if [ ! -f .env ]; then

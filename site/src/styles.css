@@ -1,0 +1,637 @@
+@import "tailwindcss";
+@import "@pendar/layla/theme.css";
+
+/*
+ * Layla's site. The pages are the kit's (@pendar/layla on @pendar/ui); this file adds the landing:
+ * the night («لیلا یعنی شب», Layla's lapis 900 and 950), its scenes and the dawn into the live box.
+ * Everything here is complete without motion; landing/motion.ts adds pins and scrubbing.
+ */
+
+:root {
+  --gutter: clamp(16px, 4.5vw, 96px);
+  --night: var(--color-product-900);
+  --night-deep: var(--color-product-950);
+  --night-ink: var(--color-neutral-50);
+  --night-muted: var(--color-product-200);
+  --night-faint: var(--color-product-300);
+  --night-line: color-mix(in srgb, var(--color-product-300) 26%, transparent);
+}
+
+html {
+  overflow-x: clip;
+}
+body {
+  margin: 0;
+}
+main {
+  overflow-x: clip;
+}
+.skip-link {
+  position: absolute;
+  inset-inline-start: 16px;
+  top: -100px;
+  z-index: 60;
+  padding: 8px 14px;
+  background: var(--color-surface-inverse);
+  color: var(--color-ink-inverse);
+  font-weight: 700;
+  text-decoration: none;
+}
+.skip-link:focus {
+  top: 10px;
+}
+[tabindex="-1"]:focus {
+  outline: none;
+}
+
+/* Lenis, the smooth scroll on the landing. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+/* ---------- The docs page ---------- */
+.doc p,
+.doc li {
+  line-height: 1.9;
+}
+.doc ol,
+.doc ul {
+  padding-inline-start: 1.4em;
+}
+.doc a {
+  color: var(--color-ink-link);
+}
+
+/* ---------- The landing ---------- */
+.landing {
+  position: relative;
+  background: var(--night-deep);
+  color: var(--night-ink);
+}
+.landing main {
+  position: relative;
+  z-index: 1;
+}
+
+/* The sky: fixed behind the night scenes, three depths of brick stars. */
+.l-sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 75% -10%, color-mix(in srgb, var(--color-product-700) 70%, transparent), transparent 60%),
+    radial-gradient(90% 60% at 10% 110%, color-mix(in srgb, var(--color-product-800) 80%, transparent), transparent 70%),
+    var(--night-deep);
+  pointer-events: none;
+}
+.l-sky-layer {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 220vh;
+  background-repeat: repeat;
+}
+.l-sky-layer[data-depth="2"] {
+  background-position: 160px 90px;
+}
+.l-sky-layer[data-depth="3"] {
+  background-position: 320px 240px;
+}
+
+/* The top bar: a night bar over the night, a day bar from the live box down. */
+.l-top {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 64px;
+  padding-inline: var(--gutter);
+  color: var(--night-ink);
+  transition:
+    background-color var(--duration-slow) var(--ease-standard),
+    color var(--duration-slow) var(--ease-standard);
+}
+.l-top.is-scrolled:not(.is-day) {
+  background: color-mix(in srgb, var(--night-deep) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.l-top.is-day {
+  background: color-mix(in srgb, var(--color-surface-page) 92%, transparent);
+  color: var(--color-ink-default);
+  box-shadow: 0 1px 0 var(--color-line-default);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.l-top-mark {
+  display: block;
+  line-height: 0;
+}
+.l-top-nav {
+  display: flex;
+  gap: 4px;
+  margin-inline-start: auto;
+}
+.l-top-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  color: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.l-top-nav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+@media (max-width: 760px) {
+  .l-top-nav {
+    display: none;
+  }
+}
+
+/* Buttons on the night. The main one is brick, as everywhere in Pendar's family. */
+.l-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 28px;
+}
+.l-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px;
+  border-radius: var(--radius-control);
+  font: 700 16px/1.5 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background-color var(--duration-quick) var(--ease-standard);
+}
+.l-btn:active {
+  translate: 0 1px;
+}
+.l-btn-primary {
+  background: var(--color-action-default);
+  color: var(--color-ink-on-action);
+}
+.l-btn-primary:hover {
+  background: var(--color-action-hover);
+}
+.l-btn-ghost {
+  color: var(--night-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--night-ink) 45%, transparent);
+}
+.l-btn-ghost:hover {
+  box-shadow: inset 0 0 0 1px var(--night-ink);
+}
+
+.l-h2 {
+  margin: 0 0 16px;
+  font-size: clamp(1.8rem, 1rem + 2.4vw, 3.4rem);
+  font-weight: 900;
+  line-height: 1.35;
+  text-wrap: balance;
+}
+:lang(en) .l-h2 {
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.l-p {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--night-muted);
+  font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+  line-height: 1.85;
+}
+
+/* The hero. */
+.l-hero {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding: 96px var(--gutter) 64px;
+  box-sizing: border-box;
+}
+.l-hero-mark {
+  justify-self: start;
+  width: max-content;
+  margin-bottom: 36px;
+  line-height: 0;
+}
+.l-hero-mark > svg {
+  width: auto;
+  height: 135px;
+}
+@media (min-width: 640px) {
+  .l-hero-mark > svg {
+    height: 189px;
+  }
+}
+@media (min-width: 1100px) {
+  .l-hero-mark > svg {
+    height: 243px;
+  }
+}
+@media (min-width: 1700px) {
+  .l-hero-mark > svg {
+    height: 297px;
+  }
+}
+.l-hero-title {
+  margin: 0;
+  max-width: 24ch;
+  font-size: clamp(1.9rem, 1rem + 2.6vw, 3.7rem);
+  font-weight: 900;
+  line-height: 1.45;
+  text-wrap: balance;
+}
+:lang(en) .l-hero-title {
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+.l-hero-title .w {
+  display: inline-block;
+}
+.l-hero-lead {
+  margin: 20px 0 0;
+  max-width: 42ch;
+  color: var(--night-muted);
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.35rem);
+  line-height: 1.85;
+}
+
+/* A scene: words on the reading start, the picture beside them. */
+.l-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 110px);
+  min-height: 100svh;
+  padding: 96px var(--gutter) 72px;
+  box-sizing: border-box;
+}
+@media (max-width: 899px) {
+  .l-scene {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    gap: 32px;
+  }
+}
+
+/* The message card: a light screen in the night. */
+.l-card {
+  margin: 0;
+  padding: 24px 26px;
+  border-radius: var(--radius-card);
+  background: var(--color-surface-raised);
+  color: var(--color-ink-default);
+  box-shadow: 0 40px 100px -40px rgb(10 12 40 / 0.9);
+}
+.l-card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+.l-message-text {
+  margin: 0;
+  font-size: clamp(1.15rem, 1rem + 0.6vw, 1.6rem);
+  line-height: 2;
+}
+.l-mark {
+  --hl: 100%;
+  padding-block: 2px;
+  background-color: transparent;
+  background-image: linear-gradient(var(--color-product-100), var(--color-product-100));
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: var(--hl) 100%;
+  color: inherit;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* The questions, each with its options as bricks. */
+.l-qs {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.l-q {
+  padding: 18px 22px;
+  border: 1px solid var(--night-line);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--night-deep) 70%, transparent);
+}
+.l-q-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  color: var(--night-faint);
+  font-size: 13px;
+  font-weight: 700;
+}
+.l-q-text {
+  margin: 0 0 12px;
+  font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.3rem);
+  font-weight: 700;
+  line-height: 1.6;
+}
+.l-opts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.l-opt {
+  padding: 5px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-product-300) 55%, transparent);
+  border-radius: var(--radius-control);
+  color: var(--color-product-100);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* The rule. */
+.l-rule {
+  display: grid;
+  place-items: center;
+  min-height: 100svh;
+  padding: 96px var(--gutter);
+  box-sizing: border-box;
+}
+.l-rule-text {
+  margin: 0;
+  max-width: 21ch;
+  font-size: clamp(2rem, 1rem + 3.6vw, 4.6rem);
+  font-weight: 900;
+  line-height: 1.5;
+  text-align: center;
+  text-wrap: balance;
+}
+:lang(en) .l-rule-text {
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+}
+
+/* The answers: the kit's cards on the night. */
+.l-decisions {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 16px;
+  color: var(--color-ink-default);
+}
+.l-sample {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  inset-inline-end: 0;
+  padding: 2px 10px;
+  border: 1px dashed var(--night-faint);
+  color: var(--night-muted);
+  font-size: 13px;
+}
+
+/* Speed. */
+.l-speed {
+  display: grid;
+  align-content: center;
+  min-height: 100svh;
+  padding: 96px var(--gutter) 72px;
+  box-sizing: border-box;
+}
+.l-speed-inner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 24px clamp(32px, 5vw, 96px);
+}
+.l-speed-figure {
+  display: grid;
+  justify-items: start;
+  margin: 0;
+  line-height: 1;
+}
+.l-speed-under,
+.l-speed-unit {
+  color: var(--night-muted);
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.4rem);
+  font-weight: 700;
+}
+.l-speed-num {
+  color: var(--color-product-300);
+  font-size: clamp(6rem, 3rem + 10vw, 15rem);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.l-stream {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--night-muted);
+}
+.l-stream li {
+  overflow: hidden;
+  padding: 7px 12px;
+  border-inline-start: 2px solid var(--color-product-500);
+  background: rgb(0 0 0 / 0.18);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.l-ms {
+  display: inline-block;
+  min-width: 64px;
+  color: var(--color-product-300);
+}
+@media (max-width: 899px) {
+  .l-speed-inner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The sectors: a walk along them on wide screens, a list on narrow ones. */
+.l-sectors {
+  position: relative;
+  min-height: 100svh;
+  padding: 96px 0 72px;
+  box-sizing: border-box;
+}
+.l-sectors-head {
+  padding-inline: var(--gutter);
+  margin-bottom: 40px;
+}
+.l-track {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  padding-inline: var(--gutter);
+}
+.l-sector {
+  display: flex;
+  flex: 0 0 min(420px, 78vw);
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 440px;
+  padding: 28px;
+  border: 1px solid var(--night-line);
+  border-radius: var(--radius-card);
+  background: var(--night-deep);
+}
+.l-sector-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  background: var(--color-product-600);
+  color: var(--color-white);
+}
+.l-sector-title {
+  margin: 8px 0 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+.l-sector-for {
+  margin: 0;
+  color: var(--night-faint);
+  font-size: 14px;
+}
+.l-sector-what {
+  margin: 0;
+  color: var(--night-muted);
+  line-height: 1.85;
+}
+.l-sector-text {
+  margin: 4px 0 0;
+  padding: 12px 14px;
+  border-inline-start: 3px solid var(--color-product-500);
+  background: rgb(255 255 255 / 0.04);
+  font-size: 15px;
+  line-height: 1.9;
+}
+.l-sector-try {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  color: var(--night-ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.l-sector-try:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+@media (max-width: 899px), (max-height: 599px) {
+  .l-track {
+    display: grid;
+    width: auto;
+    gap: 16px;
+  }
+  .l-sector {
+    flex: none;
+    min-height: 0;
+  }
+}
+
+/* For developers. */
+.l-code {
+  min-width: 0;
+  color: var(--color-ink-default);
+}
+
+/* Dawn: the night gives way to plaster, and the live box. */
+.l-dawn {
+  height: 70vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--color-product-800) 80%, transparent) 25%,
+    var(--color-product-700) 45%,
+    var(--color-brick-300) 75%,
+    var(--color-neutral-100) 100%
+  );
+}
+.l-day {
+  position: relative;
+  z-index: 1;
+  background: var(--color-neutral-100);
+  color: var(--color-ink-default);
+}
+.l-live-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 72px var(--gutter) 120px;
+}
+.l-live-head {
+  max-width: 46rem;
+  margin-bottom: 32px;
+}
+.l-live-head .l-p {
+  color: var(--color-ink-muted);
+}
+.l-live-limits {
+  margin: 12px 0 0;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+
+/* The wall laid over the screen during a long in-page jump. */
+.l-wipe {
+  --brick: calc(100vw / 5);
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  visibility: hidden;
+  pointer-events: none;
+}
+.l-wipe i {
+  background-color: var(--night);
+  background-image: repeating-linear-gradient(90deg, transparent 0 calc(var(--brick) - 4px), var(--night-deep) calc(var(--brick) - 4px) var(--brick));
+  box-shadow: inset 0 -4px 0 var(--night-deep);
+  transform: scaleX(0);
+}
+.l-wipe i:nth-child(even) {
+  background-position: calc(var(--brick) / 2) 0;
+}
+
+/* Before the first frame: what the motion script will bring in. */
+.motion .l-top,
+.motion .l-hero-title .w,
+.motion .l-hero-lead,
+.motion .l-hero .l-actions {
+  opacity: 0;
+}

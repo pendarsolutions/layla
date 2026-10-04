@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <script>
+      // Motion is on unless the visitor asked for less; if the app never starts, show everything.
+      (function (d) {
+        var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        d.classList.add(still ? "still" : "motion");
+        setTimeout(function () { if (!window.__layla) d.classList.replace("motion", "still"); }, 5000);
+      })(document.documentElement);
+    </script>
+    <title>لیلا: متن فارسی را می‌خواند و به پرسش‌های شما پاسخ می‌دهد</title>
+    <meta name="description" content="لیلا متن فارسی را می‌خواند و به پرسش‌های شما درباره‌اش پاسخ می‌دهد: برای هر پرسش یکی از گزینه‌هایی را که خودتان داده‌اید برمی‌گزیند و می‌گوید چقدر مطمئن است. بی‌ثبت‌نام امتحان کنید." />
+    <link rel="canonical" href="https://pendarsolutions.ir/layla/" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#212759" />
+    <link rel="icon" href="favicon.ico" sizes="48x48" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="لیلا" />
+    <meta property="og:title" content="لیلا" />
+    <meta property="og:description" content="لیلا متن فارسی را می‌خواند و به پرسش‌های شما درباره‌اش پاسخ می‌دهد." />
+    <meta property="og:url" content="https://pendarsolutions.ir/layla/" />
+    <meta property="og:image" content="https://pendarsolutions.ir/layla/og-fa.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="fa_IR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div id="root"><!--app--></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
