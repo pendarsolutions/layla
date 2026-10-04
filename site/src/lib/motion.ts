@@ -38,6 +38,16 @@ export function smooth(): { lenis: Lenis; stop: () => void } {
   };
 }
 
+/**
+ * Whether the page has scrolled past a point (the top bar's night ground, its day), told on every
+ * change. Not a toggle: a toggle counts the very bottom of the page as "left", and the bar lost its
+ * ground there.
+ */
+export function past(vars: ScrollTrigger.Vars, set: (on: boolean) => void): ScrollTrigger {
+  const tell = (st: ScrollTrigger) => set(st.scroll() > st.start);
+  return ScrollTrigger.create({ ...vars, end: "max", onUpdate: tell, onRefresh: tell });
+}
+
 /** Move at once, and let every scrubbed scene arrive there too instead of catching up on screen. */
 export function arrive(lenis: Lenis | null, y: number) {
   // The page may have just grown (a page arriving, its pins added): let the smooth scroll measure it first.

@@ -5,6 +5,9 @@ same way, night, dawn, day («لیلا یعنی شب»): the cinematic landing (
 answers, the sectors, then dawn and a chat on the real model, `#try`), the docs (`#/docs`) and the
 API keys with Google sign-in (`#/keys`). Old addresses still work: `#/play` and `#/services` go to
 the landing's chat and sectors (`?service=…` sends that sector's example), `#/login` to the keys.
+The top bar's «API» is `#/api` (the docs page: what the API does, three steps to a first answer,
+then the reference); signed in, the keys page is the account (who you are, the free requests as a
+wall of bricks, the keys, the last 30 days).
 Built on Pendar's design system from Specimen: `@pendar/ui` and `@pendar/layla` (Layla's kit and
 night-lapis theme), with GSAP and Lenis for the scroll. Persian first, with English (`?lang=en`).
 

@@ -1,6 +1,6 @@
 // Diagnosis pictures of the built site (../web) at /layla/, with /layla/api/* forwarded to the live
 // Layla so the live box answers. Not a test suite.
-//   node scripts/look.mjs <out-dir> <hash> <width>x<height> [dark] [still] [en] <scroll-in-screens>...
+//   node scripts/look.mjs <out-dir> <hash> <width>x<height> [dark] [still] [en] [mock] [flow] [chat] <scroll-in-screens>...
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join } from "node:path";
@@ -9,8 +9,21 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const { chromium } = await import(pathToFileURL(fileURLToPath(new URL("../../../Pendar/ui/node_modules/@playwright/test/index.mjs", import.meta.url))).href);
 const root = fileURLToPath(new URL("../../web/", import.meta.url));
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".woff2": "font/woff2", ".svg": "image/svg+xml", ".png": "image/png", ".ico": "image/x-icon", ".webmanifest": "application/manifest+json" };
+// With "mock" in the flags, a signed-in account with two keys and a month of use, to see the account page.
+const MOCK = process.argv.includes("mock") && {
+  "/layla/api/v1/account": { user: { name: "Aria Ashrafi", email: "aria@example.com", picture: "" }, quota: { limit: 100, used: 37, remaining: 63 }, premium: {}, keys: {} },
+  "/layla/api/v1/keys": {
+    max: 5,
+    keys: [
+      { id: 2, name: "فروشگاه", prefix: "lyl_8f2a", created_at: "2026-10-02T09:12:00Z", last_used_at: "2026-10-04T15:40:00Z" },
+      { id: 1, name: "آزمایشی", prefix: "lyl_c41d", created_at: "2026-09-28T18:03:00Z", last_used_at: null },
+    ],
+  },
+  "/layla/api/v1/account/usage": { days: Array.from({ length: 30 }, (_, i) => ({ day: new Date(Date.UTC(2026, 8, 5 + i)).toISOString().slice(0, 10), requests: [0, 0, 2, 5, 1, 0, 3][i % 7] })) },
+};
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://x");
+  if (MOCK && MOCK[url.pathname] && req.method === "GET") return res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(MOCK[url.pathname]));
   if (url.pathname.startsWith("/layla/api/")) {
     const chunks = [];
     for await (const c of req) chunks.push(c);
@@ -104,6 +117,18 @@ if (flags.has("flow")) {
   await page.waitForTimeout(7000);
   console.log("old #/play?service=support:", JSON.stringify(await where()));
   await page.screenshot({ path: join(out, `L-${tag}-flow-4-old-play.png`) });
+}
+if (flags.has("bottom")) {
+  // Wheel down to the very end, as a visitor does: the top bar must keep a ground (night or day) there.
+  await page.mouse.move(width / 2, height / 2);
+  for (let i = 0; i < 400; i++) {
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(60);
+    if (await page.evaluate(() => scrollY >= document.documentElement.scrollHeight - innerHeight - 2)) break;
+  }
+  await page.waitForTimeout(1500);
+  console.log("bottom:", JSON.stringify(await page.evaluate(() => ({ y: Math.round(scrollY), max: document.documentElement.scrollHeight - innerHeight, page: Math.round(document.querySelector(".landing").getBoundingClientRect().height), top: document.querySelector(".l-top").className }))));
+  await page.screenshot({ path: join(out, `L-${tag}-bottom.png`) });
 }
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].join("\n"));
 await browser.close();

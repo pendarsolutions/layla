@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CodeBlock, Icon } from "@pendar/ui";
+import { useSession } from "../lib/session.tsx";
 import { CodeSample, OutputsTable } from "@pendar/layla";
 import { COPY, type Lang } from "../copy.ts";
 import { API, PUBLIC_API } from "../lib/api.ts";
@@ -44,13 +45,79 @@ const ERRORS: [string, string, string, string][] = [
   ["503", "busy", "سرور مشغول است؛ کمی بعد دوباره بفرستید.", "The server is busy; send again a little later."],
 ];
 
+/**
+ * What the API does, at a glance: a request goes in, an answer per question comes out. In the
+ * night beside the page's name; its answers arrive one by one, as the API sends them.
+ */
+function Exchange({ lang }: { lang: Lang }) {
+  const c = COPY[lang].pages.docs;
+  const rows: [string, string, number][] = [
+    ["tone", "منفی", 0.76],
+    ["refund", "بله", 0.88],
+    ["team", "پشتیبانی", 0.81],
+  ];
+  return (
+    <div className="x-flow" dir="ltr" aria-hidden="true">
+      <figure className="x-card">
+        <figcaption className="x-cap">
+          <span className="x-method">POST</span>
+          <span>/api/v1/decisions</span>
+        </figcaption>
+        <pre className="x-code">{`{
+  "text": "سفارشم سه روز است نرسیده…",
+  "outputs": [
+    {"id": "tone", "preset": "sentiment"},
+    {"id": "refund", "type": "yes_no"},
+    {"id": "team", "type": "choice"}
+  ]
+}`}</pre>
+      </figure>
+      <div className="x-wire">
+        <i />
+      </div>
+      <figure className="x-card x-res">
+        <figcaption className="x-cap">
+          <span className="x-ok">200</span>
+          <span>{c.answers}</span>
+        </figcaption>
+        <ul className="x-rows">
+          {rows.map(([id, label, p], i) => (
+            <li key={id} style={{ ["--i" as string]: i }}>
+              <code>{id}</code>
+              <strong dir="rtl" lang="fa">
+                {label}
+              </strong>
+              <span className="x-meter">
+                <span style={{ width: `${p * 100}%` }} />
+              </span>
+              <span className="x-p">{p.toFixed(2)}</span>
+            </li>
+          ))}
+        </ul>
+      </figure>
+    </div>
+  );
+}
+
+/**
+ * The API: what it does (the night: one line, a request and its answers), the three steps to a
+ * first answer, then the reference, with its contents held at the side.
+ */
 export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; route: RouteName }) {
   const c = COPY[lang].pages.docs;
+  const { me } = useSession();
   const fa = lang === "fa";
   const t = (p: ReactNode, e: ReactNode) => (fa ? p : e);
-  const toc: [string, string][] = fa
-    ? [["start", "شروع سریع"], ["auth", "کلید و احراز هویت"], ["request", "درخواست"], ["response", "پاسخ"], ["stream", "پاسخ جریانی"], ["presets", "خروجی‌های آماده"], ["errors", "خطاها"], ["limits", "سهم و محدودیت‌ها"]]
-    : [["start", "Quick start"], ["auth", "Keys and authentication"], ["request", "The request"], ["response", "The response"], ["stream", "Streaming"], ["presets", "Ready-made outputs"], ["errors", "Errors"], ["limits", "Quota and limits"]];
+  const groups: [string, [string, string][]][] = fa
+    ? [
+        ["شروع", [["start", "سه قدم تا اولین پاسخ"]]],
+        ["مرجع", [["auth", "کلید و احراز هویت"], ["request", "درخواست"], ["response", "پاسخ"], ["stream", "پاسخ جریانی"], ["presets", "خروجی‌های آماده"], ["errors", "خطاها"], ["limits", "سهم و محدودیت‌ها"]]],
+      ]
+    : [
+        ["Start", [["start", "Three steps to a first answer"]]],
+        ["Reference", [["auth", "Keys and authentication"], ["request", "The request"], ["response", "The response"], ["stream", "Streaming"], ["presets", "Ready-made outputs"], ["errors", "Errors"], ["limits", "Quota and limits"]]],
+      ];
+  const toc = groups.flatMap(([, items]) => items);
   const title = Object.fromEntries(toc);
   const S = ({ id, children }: { id: string; children: ReactNode }) => (
     <section id={`doc-${id}`} className="d-sec p-rise">
@@ -83,11 +150,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
   const [sampleBase, setSampleBase] = useState(PUBLIC_API);
   useEffect(() => setSampleBase(base()), []);
 
-  const steps: ReactNode[] = [
-    t(<>با حساب گوگل وارد شوید و یک <a href="#/keys">کلید API</a> بسازید.</>, <>Sign in with Google and create an <a href="#/keys">API key</a>.</>),
-    t(<>متن را با پرسش‌هایتان به <C>POST /api/v1/decisions</C> بفرستید.</>, <>Send the text with your questions to <C>POST /api/v1/decisions</C>.</>),
-    t("برای هر پرسش یک پاسخ با احتمالش برمی‌گردد.", "Each question comes back with an answer and its probability."),
-  ];
+  const keyAction = me ? c.yourKeys : c.key;
 
   return (
     <Page
@@ -102,42 +165,69 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
           <p className="l-p">{c.lead}</p>
           <div className="l-actions">
             <a className="l-btn l-btn-primary" href="#/keys">
-              {c.key}
+              <Icon name="key" size={20} />
+              {keyAction}
             </a>
-            <a className="l-btn l-btn-ghost" href={`${API}/docs`} target="_blank" rel="noopener">
-              {c.reference}
-              <Icon name="external" size={18} />
+            <a className="l-btn l-btn-ghost" href="#/docs" data-to="doc-start">
+              {c.start}
+              <Icon name="arrow-down" size={18} />
             </a>
           </div>
         </>
       }
-      side={
-        <div className="l-code" data-theme="light">
-          <CodeSample baseUrl={sampleBase} />
-        </div>
-      }
+      side={<Exchange lang={lang} />}
     >
       <div className="d-grid">
         <nav aria-label={fa ? "فهرست" : "Contents"} className="d-toc">
-          <ol>
-            {toc.map(([id, label]) => (
-              <li key={id}>
-                <a href="#/docs" data-to={`doc-${id}`} aria-current={current === id ? "true" : undefined}>
-                  {label}
-                </a>
-              </li>
-            ))}
-          </ol>
+          {groups.map(([label, items]) => (
+            <div className="d-toc-group" key={label}>
+              <p className="d-toc-label">{label}</p>
+              <ol>
+                {items.map(([id, name]) => (
+                  <li key={id}>
+                    <a href="#/docs" data-to={`doc-${id}`} aria-current={current === id ? "true" : undefined}>
+                      {name}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+          <a className="d-toc-ref" href={`${API}/docs`} target="_blank" rel="noopener">
+            {c.reference}
+            <Icon name="external" size={16} />
+          </a>
         </nav>
         <article className="doc d-article">
           <S id="start">
-            <ol className="d-steps">
-              {steps.map((step, i) => (
-                <li className="d-step" key={i}>
-                  <span className="d-step-n" aria-hidden="true">{fa ? ["۱", "۲", "۳"][i] : i + 1}</span>
-                  <p>{step}</p>
-                </li>
-              ))}
+            <ol className="d-path">
+              <li className="d-stage">
+                <span className="d-node" aria-hidden="true">{fa ? "۱" : "1"}</span>
+                <div className="d-stage-body">
+                  <h3 className="d-h3">{c.step1}</h3>
+                  <p>{me ? c.step1In : c.step1Out}</p>
+                  <a className="d-go" href="#/keys">
+                    {keyAction}
+                    <Icon name="arrow-forward" size={18} />
+                  </a>
+                </div>
+              </li>
+              <li className="d-stage">
+                <span className="d-node" aria-hidden="true">{fa ? "۲" : "2"}</span>
+                <div className="d-stage-body">
+                  <h3 className="d-h3">{c.step2}</h3>
+                  <p>{t(<>متن را با پرسش‌هایتان به <C>POST /api/v1/decisions</C> بفرستید و کلید را در سرآیند <C>Authorization</C> بگذارید.</>, <>Send the text with your questions to <C>POST /api/v1/decisions</C>, with the key in the <C>Authorization</C> header.</>)}</p>
+                  <CodeSample baseUrl={sampleBase} />
+                </div>
+              </li>
+              <li className="d-stage">
+                <span className="d-node" aria-hidden="true">{fa ? "۳" : "3"}</span>
+                <div className="d-stage-body">
+                  <h3 className="d-h3">{c.step3}</h3>
+                  <p>{t(<>برای هر پرسش، زیر همان <C>id</C>، یکی از گزینه‌ها (<C>label</C>) و احتمالش (<C>probability</C>) برمی‌گردد.</>, <>Each question comes back under its own <C>id</C>: one of its options (<C>label</C>) and its probability (<C>probability</C>).</>)}</p>
+                  <CodeBlock code={RESPONSE} label={t("پاسخ", "Response") as string} />
+                </div>
+              </li>
             </ol>
           </S>
           <S id="auth">
@@ -156,8 +246,14 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
             <p className="text-body-small text-ink-muted">{t("شناسهٔ هر خروجی (id) را خودتان می‌گذارید و پاسخ با همان شناسه برمی‌گردد.", "You choose each output's id, and its answer comes back under the same id.")}</p>
           </S>
           <S id="response">
-            <p>{t(<>پاسخ‌ها به همان ترتیب درخواست برمی‌گردند. <C>label</C> پاسخ به زبان ساده است و <C>options</C> احتمال همهٔ گزینه‌ها را دارد.</>, <>Answers come back in the order asked. <C>label</C> is the answer in words and <C>options</C> holds every option's probability.</>)}</p>
-            <CodeBlock code={RESPONSE} label={t("پاسخ", "Response") as string} />
+            <p>{t(<>پاسخ‌ها به همان ترتیب درخواست برمی‌گردند (نمونه‌اش در قدم ۳). هر پاسخ در <C>results</C>:</>, <>Answers come back in the order asked (step 3 shows one). Each answer in <C>results</C>:</>)}</p>
+            <ul>
+              <li><C>id</C>{t(": همان شناسه‌ای که خودتان گذاشتید.", ": the id you gave the output.")}</li>
+              <li><C>answer</C>{t(" و ", " and ")}<C>label</C>{t(": گزینهٔ برگزیده؛ label به زبان ساده.", ": the option picked; label is it in words.")}</li>
+              <li><C>probability</C>{t(": احتمال آن گزینه، از ۰ تا ۱.", ": that option's probability, from 0 to 1.")}</li>
+              <li><C>options</C>{t(": همهٔ گزینه‌ها با احتمال هر کدام.", ": every option with its probability.")}</li>
+              <li><C>confidence</C>{t(": چقدر از بقیه جلوتر است؛ کم یعنی «نامطمئن»، آن را به یک نفر بسپارید.", ": how far ahead of the rest it is; low means unsure, so pass it to a person.")}</li>
+            </ul>
             <p>{t(<>متن بلندتر از حد مدل کوتاه می‌شود: ابتدا و انتهایش خوانده می‌شود و <C>truncated</C> برابر true است.</>, <>A text longer than the model reads is shortened: its beginning and end are read, and <C>truncated</C> is true.</>)}</p>
           </S>
           <S id="stream">

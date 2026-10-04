@@ -1,4 +1,4 @@
-import { ScrollTrigger, ease, gsap, q, qa, remeasure, smooth, type Lenis } from "../lib/motion.ts";
+import { ScrollTrigger, ease, gsap, past, q, qa, remeasure, smooth, type Lenis } from "../lib/motion.ts";
 
 type Hooks = { setDay: (day: boolean) => void; setScrolled: (scrolled: boolean) => void };
 
@@ -13,8 +13,8 @@ export function setupPage(root: HTMLElement, { setDay, setScrolled }: Hooks): ()
   const cleanups: (() => void)[] = [];
   const day = q(root, ".p-day");
 
-  const dayST = ScrollTrigger.create({ trigger: day, start: "top 72px", end: "max", onToggle: (st) => setDay(st.isActive) });
-  const solidST = ScrollTrigger.create({ start: 40, end: "max", onToggle: (st) => setScrolled(st.isActive) });
+  const dayST = past({ trigger: day, start: "top 72px" }, setDay);
+  const solidST = past({ start: 40 }, setScrolled);
   // What arrives later (the account, once it's loaded) is measured, and rises like the rest.
   let riseNew = () => {};
   cleanups.push(() => (dayST.kill(), solidST.kill()), remeasure(q(root, "main"), () => riseNew()));
@@ -44,7 +44,7 @@ export function setupPage(root: HTMLElement, { setDay, setScrolled }: Hooks): ()
 
     gsap
       .timeline({ delay: 0.25 })
-      .fromTo(qa(root, ".p-title .w"), { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.8, ease: enter, stagger: 0.06 })
+      .fromTo(qa(root, ".p-title .w:not(.w-late)"), { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.8, ease: enter, stagger: 0.06 })
       .fromTo(qa(root, ".p-head-copy > :not(.p-title, .p-late)"), { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: enter, stagger: 0.1 }, "-=0.55")
       .fromTo(qa(root, ".p-head-side:not(.p-late)"), { x: () => -forward * 80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.9, ease: enter }, 0.15);
 

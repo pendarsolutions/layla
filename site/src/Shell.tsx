@@ -1,24 +1,47 @@
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
-import { Avatar } from "@pendar/ui";
 import { LaylaFooter, LaylaWordmark } from "@pendar/layla";
 import { COPY, type Lang } from "./copy.ts";
 import { Sky } from "./landing/Sky.tsx";
 import type { RouteName } from "./lib/router.ts";
-import { useSession } from "./lib/session.tsx";
+import { useSession, type Account } from "./lib/session.tsx";
 import { setupPage } from "./pages/motion.ts";
 
-/** Text as words, one span each, for word-by-word motion; Persian letters join, so never letters. */
-export function Words({ text }: { text: string }) {
+/**
+ * Text as words, one span each, for word-by-word motion; Persian letters join, so never letters.
+ * `late`: the words rise by themselves (CSS), for text that arrives after the page has opened.
+ */
+export function Words({ text, late }: { text: string; late?: boolean }) {
   const words = text.split(" ");
   return (
     <>
       {words.map((w, i) => (
         <Fragment key={i}>
-          <span className="w">{w}</span>
+          <span className={late ? "w w-late" : "w"} style={late ? { ["--i" as string]: i } : undefined}>
+            {w}
+          </span>
           {i < words.length - 1 ? " " : null}
         </Fragment>
       ))}
     </>
+  );
+}
+
+/** The account's face: the Google picture, or the initials on a lapis tile. */
+export function Face({ me }: { me: Account }) {
+  const name = me.user.name || me.user.email || "?";
+  const [broken, setBroken] = useState(false);
+  const initials = name
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]!.toUpperCase())
+    .join("");
+  return me.user.picture && !broken ? (
+    <img className="a-face" src={me.user.picture} alt="" referrerPolicy="no-referrer" onError={() => setBroken(true)} />
+  ) : (
+    <span className="a-face" aria-hidden="true">
+      {initials}
+    </span>
   );
 }
 
@@ -34,7 +57,7 @@ function HeaderEnd({ lang, onLang, route }: { lang: Lang; onLang: () => void; ro
       </button>
       {me ? (
         <a href="#/keys" className="l-top-me" aria-label={n.account} aria-current={route === "keys" ? "page" : undefined}>
-          <Avatar name={me.user.name || me.user.email || "?"} src={me.user.picture} size="sm" />
+          <Face me={me} />
         </a>
       ) : (
         <a href="#/keys" className="l-top-in" aria-current={route === "keys" ? "page" : undefined}>
@@ -62,8 +85,8 @@ export function TopBar({ lang, onLang, route, day, scrolled }: { lang: Lang; onL
         <a href="#/play" data-scroll={here ? "try" : undefined}>
           {n.try}
         </a>
-        <a href="#/docs" aria-current={route === "docs" ? "page" : undefined}>
-          {n.docs}
+        <a href="#/api" aria-current={route === "docs" ? "page" : undefined}>
+          {n.api}
         </a>
       </nav>
       <HeaderEnd lang={lang} onLang={onLang} route={route} />

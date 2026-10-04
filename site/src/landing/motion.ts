@@ -1,5 +1,5 @@
 import { flushSync } from "react-dom";
-import { ScrollTrigger, arrive, ease, gsap, q, qa, smooth, wipe, type Lenis } from "../lib/motion.ts";
+import { ScrollTrigger, arrive, ease, gsap, past, q, qa, smooth, wipe, type Lenis } from "../lib/motion.ts";
 
 type Hooks = {
   setStep: (n: number) => void;
@@ -27,10 +27,10 @@ export function setupLanding(root: HTMLElement, { setStep, setDay, setScrolled, 
 
   // The top bar is a night bar over the night, and a day bar from the live box down.
   // refreshPriority -1: measured after the pinned scenes above it have added their length.
-  const dayST = ScrollTrigger.create({ trigger: q(root, ".l-live"), start: "top 72px", end: "max", refreshPriority: -1, onToggle: (st) => setDay(st.isActive) });
+  const dayST = past({ trigger: q(root, ".l-live"), start: "top 72px", refreshPriority: -1 }, setDay);
   cleanups.push(() => dayST.kill());
   // Once the page moves, the night bar gets a faint ground of its own, so text passing under it stays clear.
-  const solidST = ScrollTrigger.create({ start: 80, end: "max", onToggle: (st) => setScrolled(st.isActive) });
+  const solidST = past({ start: 80 }, setScrolled);
   cleanups.push(() => solidST.kill());
 
   // The links that stay on this page: «امتحان کنید» goes to the live chat (with a sector's example,

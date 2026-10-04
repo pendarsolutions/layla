@@ -226,7 +226,7 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
               <a className="l-btn l-btn-primary" href="#/keys">
                 {c.dev.key}
               </a>
-              <a className="l-btn l-btn-ghost" href="#/docs">
+              <a className="l-btn l-btn-ghost" href="#/api">
                 {c.dev.docs}
               </a>
             </div>
