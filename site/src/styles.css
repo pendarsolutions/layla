@@ -3,9 +3,11 @@
 @import "./chat/chat.css";
 
 /*
- * Layla's site. The pages are the kit's (@pendar/layla on @pendar/ui); this file adds the landing:
- * the night («لیلا یعنی شب», Layla's lapis 900 and 950), its scenes and the dawn into the live box.
- * Everything here is complete without motion; landing/motion.ts adds pins and scrubbing.
+ * Layla's site, on the kit (@pendar/layla on @pendar/ui). Every page is told the same way: the
+ * night («لیلا یعنی شب», Layla's lapis 900 and 950), a dawn, and the day where the work is. The
+ * landing is the long version (its scenes, then the live chat); the docs and the keys are short
+ * ones (a night head, then the day). Everything here is complete without motion; landing/motion.ts
+ * and pages/motion.ts add the pins, the scrubbing and the reveals.
  */
 
 :root {
@@ -20,6 +22,9 @@
 
 html {
   overflow-x: clip;
+  /* The pages move the scroll themselves (jumps, pins): the browser mustn't nudge it when the chat
+     or the sample answers change size. */
+  overflow-anchor: none;
 }
 body {
   margin: 0;
@@ -55,19 +60,6 @@ html.lenis body {
 }
 .lenis.lenis-stopped {
   overflow: clip;
-}
-
-/* ---------- The docs page ---------- */
-.doc p,
-.doc li {
-  line-height: 1.9;
-}
-.doc ol,
-.doc ul {
-  padding-inline-start: 1.4em;
-}
-.doc a {
-  color: var(--color-ink-link);
 }
 
 /* ---------- The landing ---------- */
@@ -155,13 +147,72 @@ html.lenis body {
   font-weight: 600;
   text-decoration: none;
 }
-.l-top-nav a:hover {
+.l-top-nav a:hover,
+.l-top-nav a[aria-current="page"] {
   text-decoration: underline;
-  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
 }
-@media (max-width: 760px) {
-  .l-top-nav {
+.l-top-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.l-top-lang,
+.l-top-in {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 600 14px/1.5 var(--font-sans);
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.8;
+}
+.l-top-lang:hover,
+.l-top-in:hover {
+  opacity: 1;
+}
+.l-top-in {
+  font-weight: 800;
+  opacity: 1;
+}
+.l-top-in[aria-current="page"] {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 8px;
+}
+.l-top-me {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 4px;
+  border-radius: var(--radius-control);
+}
+.l-short {
+  display: none;
+}
+@media (max-width: 640px) {
+  .l-top {
+    gap: 4px;
+  }
+  .l-top-nav a {
+    padding: 0 8px;
+    font-size: 14px;
+  }
+  .l-top-lang,
+  .l-top-in {
+    padding: 0 6px;
+    font-size: 13px;
+  }
+  .l-long {
     display: none;
+  }
+  .l-short {
+    display: inline;
   }
 }
 
@@ -590,15 +641,18 @@ html.lenis body {
   background: var(--color-neutral-100);
   color: var(--color-ink-default);
 }
+/* The live chat: a scene of its own, a screen tall, so «امتحان کنید» lands right on it. */
+.l-live {
+  display: grid;
+  align-items: center;
+  min-height: 100svh;
+}
 .l-live-inner {
+  box-sizing: border-box;
+  width: 100%;
   max-width: 72rem;
   margin: 0 auto;
-  padding: 72px var(--gutter) 120px;
-}
-.l-live-head {
-  max-width: 46rem;
-  margin: 0 auto 24px;
-  text-align: center;
+  padding: 88px var(--gutter) 48px;
 }
 
 /* The wall laid over the screen during a long in-page jump. */
@@ -622,10 +676,329 @@ html.lenis body {
   background-position: calc(var(--brick) / 2) 0;
 }
 
+/* ---------- The docs and the keys: a night head, a dawn, the day ---------- */
+.p-head {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 110px);
+  min-height: min(92svh, 900px);
+  padding: 128px var(--gutter) 40px;
+  box-sizing: border-box;
+}
+.p-head.is-solo {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+}
+@media (max-width: 899px) {
+  .p-head {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    padding-top: 120px;
+  }
+  .p-head.is-solo {
+    min-height: 78svh;
+  }
+}
+.p-title {
+  margin: 0 0 20px;
+  font-size: clamp(2.6rem, 1.2rem + 4.6vw, 5.6rem);
+  font-weight: 900;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+:lang(en) .p-title {
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+}
+.p-title .w {
+  display: inline-block;
+}
+.p-head-side {
+  min-width: 0;
+}
+.p-dawn {
+  height: 44vh;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--color-product-800) 80%, transparent) 25%,
+    var(--color-product-700) 45%,
+    var(--color-brick-300) 75%,
+    var(--color-neutral-100) 100%
+  );
+}
+.p-body {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 40px var(--gutter) 120px;
+}
+
+/* The docs: the contents held at the side, the sections beside them. */
+.d-grid {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 88px);
+}
+.d-toc {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+}
+.d-toc ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.d-toc a {
+  display: block;
+  padding: 7px 14px;
+  border-inline-start: 2px solid var(--color-line-default);
+  color: var(--color-ink-muted);
+  font-size: 15px;
+  text-decoration: none;
+  transition:
+    color var(--duration-quick) var(--ease-standard),
+    border-color var(--duration-quick) var(--ease-standard);
+}
+.d-toc a:hover {
+  color: var(--color-ink-default);
+}
+.d-toc a[aria-current="true"] {
+  border-color: var(--color-product-500);
+  color: var(--color-ink-default);
+  font-weight: 800;
+}
+@media (max-width: 899px) {
+  .d-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .d-toc {
+    position: static;
+  }
+  .d-toc ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .d-toc a {
+    padding: 4px 12px;
+    border: 1px solid var(--color-line-default);
+    border-radius: var(--radius-control);
+    font-size: 14px;
+  }
+}
+.d-article {
+  display: grid;
+  gap: clamp(56px, 7vw, 96px);
+  min-width: 0;
+}
+.d-h2 {
+  margin: 0 0 20px;
+  font-size: clamp(1.6rem, 1rem + 1.6vw, 2.5rem);
+  font-weight: 900;
+  line-height: 1.4;
+}
+:lang(en) .d-h2 {
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+.doc p,
+.doc li {
+  line-height: 1.9;
+}
+.d-sec > h2 + *,
+.d-sec > * + * {
+  margin-block: 16px 0;
+}
+.d-sec ul,
+.d-sec ol {
+  margin-block-end: 0;
+}
+.d-step code {
+  white-space: nowrap;
+}
+.doc ol,
+.doc ul {
+  padding-inline-start: 1.4em;
+}
+.doc a {
+  color: var(--color-ink-link);
+}
+.doc .d-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 760px) {
+  .doc .d-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.d-step {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 24px;
+  border: 1px solid var(--color-line-default);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-raised);
+}
+.d-step p {
+  margin: 0;
+}
+.d-step-n {
+  color: var(--color-product-500);
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1;
+}
+@media (max-width: 760px) {
+  .d-step {
+    grid-template-columns: 36px minmax(0, 1fr);
+    align-items: center;
+    padding: 16px 18px;
+  }
+  .d-step-n {
+    font-size: 2rem;
+  }
+}
+
+/* The keys: signing in on the night, the free requests as a big number, the keys in the day. */
+.k-signin {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+  margin-top: 32px;
+}
+.k-google {
+  min-height: 44px;
+}
+.k-note {
+  margin: 0;
+  color: var(--night-muted);
+  font-size: 14px;
+}
+.k-note a {
+  color: var(--night-ink);
+  font-weight: 700;
+}
+.k-error {
+  margin: 0;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--color-brick-400);
+  background: rgb(0 0 0 / 0.2);
+  color: var(--night-ink);
+  font-size: 14px;
+}
+.k-dev {
+  display: grid;
+  gap: 10px;
+  width: min(100%, 320px);
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: var(--color-surface-raised);
+  color: var(--color-ink-default);
+}
+.k-wait {
+  padding-top: 12px;
+  color: var(--night-muted);
+}
+.k-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 24px;
+  color: var(--night-muted);
+  font-size: 15px;
+}
+.k-out {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--night-ink) 45%, transparent);
+  color: var(--night-ink);
+  font: 700 14px/1.5 var(--font-sans);
+  cursor: pointer;
+}
+.k-out:hover {
+  box-shadow: inset 0 0 0 1px var(--night-ink);
+}
+.k-left {
+  justify-self: center;
+}
+.k-of {
+  margin-top: 10px;
+  color: var(--night-faint);
+  font-size: 14px;
+  font-weight: 600;
+}
+@media (max-width: 899px) {
+  .k-left {
+    justify-self: start;
+  }
+}
+.k-grid {
+  display: grid;
+  gap: 24px;
+}
+.k-next {
+  margin: 8px 0 0;
+  color: var(--color-ink-muted);
+}
+.k-next a {
+  color: var(--color-ink-link);
+  font-weight: 700;
+}
+
 /* Before the first frame: what the motion script will bring in. */
-.motion .l-top,
+.motion .landing:not(.l-page) .l-top,
 .motion .l-hero-title .w,
 .motion .l-hero-lead,
-.motion .l-hero .l-actions {
+.motion .l-hero .l-actions,
+.motion .p-title .w,
+.motion .p-head-copy > :not(.p-title, .p-late),
+.motion .p-head-side:not(.p-late) {
   opacity: 0;
+}
+/* What a page's head shows once the account is known: it rises in by itself. */
+.p-late {
+  animation: p-late 0.8s var(--ease-enter) both;
+}
+.p-head-side.p-late {
+  animation-name: p-late-side;
+  animation-duration: 0.9s;
+}
+@keyframes p-late {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+}
+@keyframes p-late-side {
+  from {
+    opacity: 0;
+    translate: -80px 0;
+  }
+}
+[dir="ltr"] .p-head-side.p-late {
+  animation-name: p-late-side-ltr;
+}
+@keyframes p-late-side-ltr {
+  from {
+    opacity: 0;
+    translate: 80px 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .p-late {
+    animation: none;
+  }
 }

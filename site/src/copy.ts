@@ -11,7 +11,7 @@ type Q = { id: string; type: QuestionType; kind: string; question: string; optio
 
 export interface Copy {
   title: string;
-  nav: { play: string; services: string; docs: string; keys: string; signIn: string; lang: string; skip: string };
+  nav: { try: string; docs: string; signIn: string; account: string; lang: string; langShort: string; skip: string; home: string; label: string };
   hero: { title: string; lead: string; try: string; key: string };
   message: { title: string; body: string; label: string; text: string; marks: string[] };
   questions: { title: string; body: string; list: Q[] };
@@ -20,7 +20,7 @@ export interface Copy {
   speed: { title: string; body: string; under: string; number: number; unit: string };
   sectors: { title: string; body: string; try: string };
   dev: { title: string; body: string; key: string; docs: string };
-  live: { title: string };
+  live: { label: string };
   chat: {
     empty: string;
     placeholder: string;
@@ -39,10 +39,8 @@ export interface Copy {
     errors: Record<string, string>;
   };
   pages: {
-    play: { title: string; lead: string };
-    services: { title: string; lead: string };
-    docs: { title: string; lead: string };
-    keys: { title: string; lead: string; signOut: string; sample: string };
+    docs: { title: string; lead: string; key: string; reference: string };
+    keys: { title: string; leadOut: string; leadIn: string; signOut: string; left: string; of: (limit: string) => string; noSignIn: string; try: string; next: string; docs: string };
     login: { notSetUp: string; failed: string; devEmail: string; devButton: string };
     error: string;
     network: string;
@@ -76,7 +74,7 @@ const SUPPORT_TEXT = "سلام، سه روز است سفارشم را ثبت ک�
 
 const fa: Copy = {
   title: "لیلا: متن فارسی را می‌خواند و به پرسش‌های شما پاسخ می‌دهد",
-  nav: { play: "آزمایش", services: "خدمات", docs: "مستندات", keys: "کلیدها", signIn: "ورود", lang: "English", skip: "رفتن به محتوا" },
+  nav: { try: "امتحان کنید", docs: "مستندات", signIn: "ورود", account: "حساب شما و کلیدهای API", lang: "English", langShort: "EN", skip: "رفتن به محتوا", home: "لیلا، صفحهٔ اول", label: "صفحه‌ها" },
   hero: {
     title: "لیلا متن فارسی را می‌خواند و به پرسش‌های شما درباره‌اش پاسخ می‌دهد.",
     lead: "برای هر پرسش، یکی از گزینه‌هایی را که خودتان داده‌اید برمی‌گزیند و می‌گوید چقدر مطمئن است.",
@@ -120,7 +118,7 @@ const fa: Copy = {
     key: "کلید بسازید",
     docs: "مستندات",
   },
-  live: { title: "خودتان امتحان کنید" },
+  live: { label: "امتحان لیلا" },
   chat: {
     empty: "متنی بفرستید تا لیلا بخواند.",
     placeholder: "متنی فارسی بنویسید یا بچسبانید…",
@@ -145,10 +143,19 @@ const fa: Copy = {
     },
   },
   pages: {
-    play: { title: "صفحهٔ آزمایش", lead: "متنی بنویسید، پرسش‌هایتان را انتخاب کنید و بفرستید؛ پاسخ‌ها همان لحظه که آماده شوند می‌رسند." },
-    services: { title: "خدمات", lead: "شش بخشی که لیلا برایشان کار می‌کند، هر کدام با نمونه‌ای که همان‌جا امتحان می‌شود." },
-    docs: { title: "مستندات", lead: "هر آنچه برای فرستادن اولین درخواست به لیلا لازم دارید." },
-    keys: { title: "کلیدها", lead: "کلیدهای API، درخواست‌های رایگان و مصرف ۳۰ روز گذشته.", signOut: "خروج", sample: "نمونهٔ درخواست" },
+    docs: { title: "مستندات", lead: "هر آنچه برای فرستادن اولین درخواست به لیلا لازم دارید.", key: "کلید بسازید", reference: "مرجع فنی" },
+    keys: {
+      title: "کلیدهای API",
+      leadOut: "لیلا را به برنامهٔ خودتان وصل کنید. با حساب گوگل وارد شوید؛ هر حساب ۱۰۰ درخواست رایگان دارد.",
+      leadIn: "کلیدهایتان را بسازید و ببینید چقدر از درخواست‌های رایگان مانده است.",
+      signOut: "خروج",
+      left: "درخواست رایگان مانده",
+      of: (limit) => `از ${limit} · نسخهٔ ویژه به‌زودی`,
+      noSignIn: "امتحان کردن لیلا ورود نمی‌خواهد.",
+      try: "امتحان کنید",
+      next: "نمونهٔ درخواست و همهٔ جزئیات:",
+      docs: "مستندات",
+    },
     login: {
       notSetUp: "ورود با گوگل هنوز روی این سرور راه نیفتاده است.",
       failed: "ورود با گوگل تأیید نشد. دوباره امتحان کنید.",
@@ -162,7 +169,7 @@ const fa: Copy = {
 
 const en: Copy = {
   title: "Layla: reads Persian text and answers your questions about it",
-  nav: { play: "Try it", services: "Services", docs: "Docs", keys: "Keys", signIn: "Sign in", lang: "فارسی", skip: "Skip to content" },
+  nav: { try: "Try it", docs: "Docs", signIn: "Sign in", account: "Your account and API keys", lang: "فارسی", langShort: "فا", skip: "Skip to content", home: "Layla, home", label: "Pages" },
   hero: {
     title: "Layla reads Persian text and answers your questions about it.",
     lead: "For each question it picks one of the options you gave it, and says how sure it is.",
@@ -206,7 +213,7 @@ const en: Copy = {
     key: "Create a key",
     docs: "Docs",
   },
-  live: { title: "Try it yourself" },
+  live: { label: "Try Layla" },
   chat: {
     empty: "Send a Persian text for Layla to read.",
     placeholder: "Write or paste a Persian text…",
@@ -231,10 +238,19 @@ const en: Copy = {
     },
   },
   pages: {
-    play: { title: "Playground", lead: "Write a text, choose your questions and send; each answer arrives the moment it's ready." },
-    services: { title: "Services", lead: "Six sectors Layla works for, each with an example you can try right there." },
-    docs: { title: "Docs", lead: "Everything you need to send Layla your first request." },
-    keys: { title: "Keys", lead: "Your API keys, free requests and the last 30 days of use.", signOut: "Sign out", sample: "A sample request" },
+    docs: { title: "Docs", lead: "Everything you need to send Layla your first request.", key: "Create a key", reference: "Technical reference" },
+    keys: {
+      title: "API keys",
+      leadOut: "Connect Layla to your own program. Sign in with Google; every account gets 100 free requests.",
+      leadIn: "Create your keys and see how many free requests are left.",
+      signOut: "Sign out",
+      left: "free requests left",
+      of: (limit) => `of ${limit} · Premium coming soon`,
+      noSignIn: "Trying Layla needs no sign-in.",
+      try: "Try it",
+      next: "A sample request and every detail:",
+      docs: "Docs",
+    },
     login: {
       notSetUp: "Google sign-in isn't set up on this server yet.",
       failed: "Google couldn't confirm the sign-in. Try again.",

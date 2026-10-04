@@ -9,8 +9,9 @@ ticket, and for every question you ask you get an answer with its probability:
 - **yes / no**: the probability of yes (is the customer asking for a refund?)
 - **scale**: a place on an ordered scale (how urgent is it?)
 
-This repository is the Layla service: an HTTP API around the Layla 1.0 model and the Layla website, with a playground,
-API and docs pages, ready-made services, Google sign-in, and a keys page where every account gets 100 free requests.
+This repository is the Layla service: an HTTP API around the Layla 1.0 model and the Layla website: a landing that
+ends in a chat on the real model, the docs, and an API keys page with Google sign-in, where every account gets 100 free
+requests.
 
 ## Example
 

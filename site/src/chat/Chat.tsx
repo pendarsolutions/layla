@@ -125,7 +125,10 @@ function Questions({ open, onClose, outputs, setOutputs, lang }: { open: boolean
   );
 }
 
-export function Chat({ lang, variant, autoSend }: { lang: Lang; variant: "page" | "embed"; autoSend?: { text: string; outputs: OutputSpec[] } }) {
+/** A text to send from outside the chat (a sector's example); a new id sends it again. */
+export type Ask = { id: number; text: string; outputs: OutputSpec[] };
+
+export function Chat({ lang, ask }: { lang: Lang; ask?: Ask }) {
   const c = COPY[lang].chat;
   const w = useWords();
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -136,7 +139,6 @@ export function Chat({ lang, variant, autoSend }: { lang: Lang; variant: "page" 
   const abort = useRef<AbortController | null>(null);
   const box = useRef<HTMLTextAreaElement>(null);
   const log = useRef<HTMLDivElement>(null);
-  const end = useRef<HTMLDivElement>(null);
   const next = useRef(1);
 
   const update = (id: number, change: (t: Turn) => Turn) => setTurns((all) => all.map((t) => (t.id === id ? change(t) : t)));
@@ -170,22 +172,20 @@ export function Chat({ lang, variant, autoSend }: { lang: Lang; variant: "page" 
     [busy, lang],
   );
 
-  // A service's «امتحان کنید» arrives with its example: send it at once.
-  const sent = useRef(false);
+  // A sector's «امتحان کنید» arrives with its example: send it at once.
+  const asked = useRef(0);
   useEffect(() => {
-    if (autoSend && !sent.current) {
-      sent.current = true;
-      setOutputs(autoSend.outputs);
-      void send(autoSend.text, autoSend.outputs);
+    if (ask && ask.id !== asked.current) {
+      asked.current = ask.id;
+      setOutputs(ask.outputs);
+      void send(ask.text, ask.outputs);
     }
-  }, [autoSend, send]);
+  }, [ask, send]);
 
-  // Keep the newest answers in view.
+  // Keep the newest answers in view (the log scrolls inside the panel, not the page).
   useEffect(() => {
-    if (!turns.length) return;
-    if (variant === "embed" && log.current) log.current.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
-    else end.current?.scrollIntoView({ block: "end", behavior: "smooth" });
-  }, [turns, variant]);
+    if (turns.length && log.current) log.current.scrollTo({ top: log.current.scrollHeight, behavior: "smooth" });
+  }, [turns]);
 
   // The box grows with the text, up to a few lines.
   useEffect(() => {
@@ -238,7 +238,7 @@ export function Chat({ lang, variant, autoSend }: { lang: Lang; variant: "page" 
   );
 
   return (
-    <div className={`c-chat c-${variant} ${turns.length ? "has-turns" : "is-empty"}`}>
+    <div className={`c-chat ${turns.length ? "has-turns" : "is-empty"}`}>
       <div className="c-log" ref={log} data-lenis-prevent="">
         {turns.length === 0 ? (
           <div className="c-empty">
@@ -293,7 +293,6 @@ export function Chat({ lang, variant, autoSend }: { lang: Lang; variant: "page" 
             })}
           </ol>
         )}
-        <div ref={end} className="c-end" />
       </div>
       <div className="c-dock">
         {composer}

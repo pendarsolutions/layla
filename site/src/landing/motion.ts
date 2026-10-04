@@ -1,43 +1,26 @@
-import { gsap } from "gsap";
-import { CustomEase } from "gsap/CustomEase";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import Lenis from "lenis";
+import { flushSync } from "react-dom";
+import { ScrollTrigger, arrive, ease, gsap, q, qa, smooth, wipe, type Lenis } from "../lib/motion.ts";
 
-gsap.registerPlugin(ScrollTrigger, CustomEase);
-
-type Hooks = { setStep: (n: number) => void; setDay: (day: boolean) => void };
-
-const q = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => root.querySelector<T>(sel)!;
-const qa = <T extends Element = HTMLElement>(root: ParentNode, sel: string) => [...root.querySelectorAll<T>(sel)];
-const css = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-
-/** Pendar's ease tokens (--ease-*) as GSAP eases. */
-function ease(name: "enter" | "settle" | "standard"): string {
-  const id = `layla-${name}`;
-  if (!CustomEase.get(id)) {
-    const [a, b, c, d] = (css(`--ease-${name}`).match(/cubic-bezier\(([^)]+)\)/)?.[1] ?? "0.2,0,0,1").split(",").map(Number);
-    CustomEase.create(id, `M0,0 C${a},${b} ${c},${d} 1,1`);
-  }
-  return id;
-}
-
-/** Move at once, and let every scrubbed scene arrive there too instead of catching up on screen. */
-function arrive(lenis: Lenis, y: number) {
-  lenis.scrollTo(y, { immediate: true, force: true });
-  ScrollTrigger.update();
-  for (const st of ScrollTrigger.getAll()) {
-    if (!st.vars.scrub) continue;
-    const tween = st.getTween() as gsap.core.Tween | undefined;
-    if (tween && typeof tween.progress === "function") tween.progress(1);
-  }
-}
+type Hooks = {
+  setStep: (n: number) => void;
+  setDay: (day: boolean) => void;
+  setScrolled: (scrolled: boolean) => void;
+  /** A sector's «امتحان کنید»: send its example to the live chat. */
+  ask: (service: string) => void;
+};
+type Target = "try" | "sectors" | "top";
+export type LandingControl = {
+  destroy: () => void;
+  /** Go to a part of the page at once (arriving from another page or an old address). */
+  go: (target: Target, opts?: { service?: string | null }) => void;
+};
 
 /**
  * The landing's story, told by the scroll. Without motion (or before the script runs) every scene
  * is simply there in its finished state; this adds the pins, the scrubbing and the smooth scroll.
  * Returns its own cleanup (the page leaves, or the language changes).
  */
-export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () => void {
+export function setupLanding(root: HTMLElement, { setStep, setDay, setScrolled, ask }: Hooks): LandingControl {
   const rtl = document.documentElement.dir === "rtl";
   const forward = rtl ? 1 : -1; // the next thing arrives from the left in Persian
   const cleanups: (() => void)[] = [];
@@ -47,52 +30,44 @@ export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () 
   const dayST = ScrollTrigger.create({ trigger: q(root, ".l-live"), start: "top 72px", end: "max", refreshPriority: -1, onToggle: (st) => setDay(st.isActive) });
   cleanups.push(() => dayST.kill());
   // Once the page moves, the night bar gets a faint ground of its own, so text passing under it stays clear.
-  const solidST = ScrollTrigger.create({ start: 80, end: "max", toggleClass: { targets: q(root, ".l-top"), className: "is-scrolled" } });
+  const solidST = ScrollTrigger.create({ start: 80, end: "max", onToggle: (st) => setScrolled(st.isActive) });
   cleanups.push(() => solidST.kill());
 
-  // The hero's «امتحان کنید» goes to the live box on this page.
+  // The links that stay on this page: «امتحان کنید» goes to the live chat (with a sector's example,
+  // sent at once), the wordmark to the top. A long way closes the brick wall over the screen first.
   let lenis: Lenis | null = null;
-  const tryBox = q(root, "#try");
+  const places: Record<Target, () => HTMLElement> = { try: () => q(root, "#try"), sectors: () => q(root, ".l-sectors"), top: () => q(root, "#main") };
+  // How many sample answers have arrived, as last told to the page.
+  let step = 3;
+  const showStep = (n: number) => n !== step && setStep((step = n));
+  function land(target: Target, service?: string | null) {
+    const el = places[target]();
+    // Going past the answers: they're all in first (on a phone they're taller then), so the page
+    // is measured as it will be.
+    if (target !== "top") flushSync(() => showStep(3));
+    arrive(lenis, target === "top" ? 0 : el.getBoundingClientRect().top + window.scrollY);
+    el.setAttribute("tabindex", "-1");
+    el.focus({ preventScroll: true });
+    if (service) ask(service);
+  }
   const onClick = (e: MouseEvent) => {
     const a = (e.target as Element | null)?.closest<HTMLAnchorElement>("a[data-scroll]");
     if (!a) return;
     e.preventDefault();
-    if (lenis) wipeTo(tryBox.getBoundingClientRect().top + window.scrollY);
-    else tryBox.scrollIntoView();
+    const target = a.dataset.scroll as Target;
+    const service = a.dataset.service;
+    if (lenis) wipe(() => land(target, service));
+    else land(target, service);
   };
   root.addEventListener("click", onClick);
   cleanups.push(() => root.removeEventListener("click", onClick));
-
-  // A long jump closes a wall of night-lapis bricks over the screen, moves, and opens it again.
-  const wall = document.createElement("div");
-  wall.className = "l-wipe";
-  wall.setAttribute("aria-hidden", "true");
-  for (let i = 0; i < 6; i++) wall.append(document.createElement("i"));
-  document.body.append(wall);
-  cleanups.push(() => wall.remove());
-  let busy = false;
-  function wipeTo(y: number) {
-    if (busy || !lenis) return;
-    busy = true;
-    const courses = [...wall.children];
-    gsap
-      .timeline({ onComplete: () => ((busy = false), gsap.set(wall, { visibility: "hidden" })) })
-      .set(wall, { visibility: "visible" })
-      .fromTo(courses, { scaleX: 0, transformOrigin: rtl ? "right center" : "left center" }, { scaleX: 1, duration: 0.3, ease: ease("enter"), stagger: { each: 0.04, from: "end" } })
-      .add(() => {
-        arrive(lenis!, y);
-        tryBox.setAttribute("tabindex", "-1");
-        tryBox.focus({ preventScroll: true });
-      })
-      .to(courses, { scaleX: 0, transformOrigin: rtl ? "left center" : "right center", duration: 0.3, ease: ease("enter"), stagger: { each: 0.04, from: "start" } }, "+=0.1");
-  }
 
   const mm = gsap.matchMedia();
   mm.add({ motion: "(prefers-reduced-motion: no-preference)", wide: "(min-width: 900px) and (min-height: 600px)" }, (ctx) => {
     const { motion, wide } = ctx.conditions as Record<string, boolean>;
     if (!motion) {
       document.documentElement.classList.replace("motion", "still");
-      setStep(3);
+      showStep(3);
       return;
     }
     document.documentElement.classList.replace("still", "motion");
@@ -100,11 +75,8 @@ export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () 
     const settle = ease("settle");
     const N = { immediateRender: false };
 
-    lenis = new Lenis({ lerp: 0.09, smoothWheel: true, autoRaf: false });
-    lenis.on("scroll", ScrollTrigger.update);
-    const raf = (t: number) => lenis!.raf(t * 1000);
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
+    const s = smooth();
+    lenis = s.lenis;
 
     /* ---- The hero: words come in; the scroll lifts the wordmark into the top bar ---- */
     const hero = q(root, ".l-hero");
@@ -204,8 +176,7 @@ export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () 
     const ans = q(root, ".l-answers");
     entry(ans, qa(ans, ".l-scene-copy > *"), { y: 40, opacity: 0 });
     entry(ans, qa(ans, ".l-decisions > *"), { y: 50, opacity: 0 }, 0.08);
-    setStep(-1);
-    let last = -1;
+    showStep(-1);
     ScrollTrigger.create({
       trigger: ans,
       start: wide ? "top top" : "top 55%",
@@ -214,7 +185,7 @@ export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () 
       onUpdate: (st) => {
         const p = st.progress;
         const next = p < 0.08 ? -1 : p < 0.3 ? 0 : p < 0.52 ? 1 : p < 0.74 ? 2 : 3;
-        if (next !== last) setStep((last = next));
+        showStep(next);
       },
     });
 
@@ -254,19 +225,23 @@ export function setupLanding(root: HTMLElement, { setStep, setDay }: Hooks): () 
       .fromTo(qa(dev, ".l-scene-copy > *"), { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: enter, stagger: 0.1 })
       .fromTo(q(dev, ".l-code"), { x: () => -forward * 80, opacity: 0 }, { x: 0, opacity: 1, duration: 0.8, ease: enter }, 0.1);
 
-    /* ---- Dawn, and the live box ---- */
-    gsap.fromTo(qa(root, ".l-live-head > *"), { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: enter, stagger: 0.1, scrollTrigger: { trigger: live, start: "top 70%", refreshPriority: -1 } });
+    /* ---- Dawn, and the live chat rising into the day ---- */
+    gsap.fromTo(q(root, ".l-live .c-chat"), { y: 60, opacity: 0 }, { y: 0, opacity: 1, duration: 0.9, ease: enter, scrollTrigger: { trigger: live, start: "top 80%", refreshPriority: -1 } });
 
     ScrollTrigger.refresh();
     return () => {
-      gsap.ticker.remove(raf);
-      lenis?.destroy();
+      s.stop();
       lenis = null;
     };
   });
   cleanups.push(() => mm.revert());
 
-  // Estedad arrives after the first layout: measure again once it has.
-  void document.fonts?.ready.then(() => ScrollTrigger.refresh());
-  return () => cleanups.reverse().forEach((f) => f());
+  // Estedad arrives after the first layout: measure again once it has (and only then go anywhere).
+  let alive = true;
+  const fonts = document.fonts?.ready.then(() => alive && ScrollTrigger.refresh()) ?? Promise.resolve();
+  cleanups.push(() => (alive = false));
+  return {
+    destroy: () => cleanups.reverse().forEach((f) => f()),
+    go: (target, { service } = {}) => void fonts.then(() => alive && land(target, service)),
+  };
 }

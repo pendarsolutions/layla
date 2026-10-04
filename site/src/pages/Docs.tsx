@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
-import { CodeBlock } from "@pendar/ui";
+import { useEffect, useState, type ReactNode } from "react";
+import { CodeBlock, Icon } from "@pendar/ui";
 import { CodeSample, OutputsTable } from "@pendar/layla";
 import { COPY, type Lang } from "../copy.ts";
-import { API } from "../lib/api.ts";
-import { PageHead } from "../Shell.tsx";
+import { API, PUBLIC_API } from "../lib/api.ts";
+import type { RouteName } from "../lib/router.ts";
+import { Page, Words } from "../Shell.tsx";
 
-const base = () => location.origin + API;
+const base = () => (typeof location === "undefined" ? PUBLIC_API : location.origin + API);
 const C = ({ children }: { children: ReactNode }) => (
   <code dir="ltr" className="rounded-control bg-surface-sunken px-1.5 py-0.5 text-[0.9em]">
     {children}
@@ -43,7 +44,7 @@ const ERRORS: [string, string, string, string][] = [
   ["503", "busy", "سرور مشغول است؛ کمی بعد دوباره بفرستید.", "The server is busy; send again a little later."],
 ];
 
-export function Docs({ lang }: { lang: Lang }) {
+export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; route: RouteName }) {
   const c = COPY[lang].pages.docs;
   const fa = lang === "fa";
   const t = (p: ReactNode, e: ReactNode) => (fa ? p : e);
@@ -52,36 +53,92 @@ export function Docs({ lang }: { lang: Lang }) {
     : [["start", "Quick start"], ["auth", "Keys and authentication"], ["request", "The request"], ["response", "The response"], ["stream", "Streaming"], ["presets", "Ready-made outputs"], ["errors", "Errors"], ["limits", "Quota and limits"]];
   const title = Object.fromEntries(toc);
   const S = ({ id, children }: { id: string; children: ReactNode }) => (
-    <section id={`doc-${id}`} className="doc-sec scroll-mt-24">
-      <h2 className="mt-0 mb-4 text-heading-medium">{title[id]}</h2>
+    <section id={`doc-${id}`} className="d-sec p-rise">
+      <h2 className="d-h2">{title[id]}</h2>
       {children}
     </section>
   );
-  const go = (id: string) => document.getElementById(`doc-${id}`)?.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+
+  // The contents mark the section being read.
+  const [current, setCurrent] = useState("start");
+  useEffect(() => {
+    const seen = new Map<string, boolean>();
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) seen.set(e.target.id.replace("doc-", ""), e.isIntersecting);
+        const first = toc.find(([id]) => seen.get(id));
+        if (first) setCurrent(first[0]);
+      },
+      { rootMargin: "-96px 0px -55% 0px" },
+    );
+    for (const [id] of toc) {
+      const el = document.getElementById(`doc-${id}`);
+      if (el) io.observe(el);
+    }
+    return () => io.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
+  // The samples show the canonical address first (as on the server), then this page's own.
+  const [sampleBase, setSampleBase] = useState(PUBLIC_API);
+  useEffect(() => setSampleBase(base()), []);
+
+  const steps: ReactNode[] = [
+    t(<>با حساب گوگل وارد شوید و یک <a href="#/keys">کلید API</a> بسازید.</>, <>Sign in with Google and create an <a href="#/keys">API key</a>.</>),
+    t(<>متن را با پرسش‌هایتان به <C>POST /api/v1/decisions</C> بفرستید.</>, <>Send the text with your questions to <C>POST /api/v1/decisions</C>.</>),
+    t("برای هر پرسش یک پاسخ با احتمالش برمی‌گردد.", "Each question comes back with an answer and its probability."),
+  ];
 
   return (
-    <>
-      <PageHead title={c.title} lead={c.lead} />
-      <div className="grid gap-10 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <nav aria-label={fa ? "فهرست" : "Contents"} className="lg:sticky lg:top-6 lg:self-start">
-          <ol className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 lg:flex-col">
+    <Page
+      lang={lang}
+      onLang={onLang}
+      route={route}
+      head={
+        <>
+          <h1 className="p-title">
+            <Words text={c.title} />
+          </h1>
+          <p className="l-p">{c.lead}</p>
+          <div className="l-actions">
+            <a className="l-btn l-btn-primary" href="#/keys">
+              {c.key}
+            </a>
+            <a className="l-btn l-btn-ghost" href={`${API}/docs`} target="_blank" rel="noopener">
+              {c.reference}
+              <Icon name="external" size={18} />
+            </a>
+          </div>
+        </>
+      }
+      side={
+        <div className="l-code" data-theme="light">
+          <CodeSample baseUrl={sampleBase} />
+        </div>
+      }
+    >
+      <div className="d-grid">
+        <nav aria-label={fa ? "فهرست" : "Contents"} className="d-toc">
+          <ol>
             {toc.map(([id, label]) => (
               <li key={id}>
-                <a href="#/docs" onClick={(e) => (e.preventDefault(), go(id))} className="text-body-small text-ink-muted no-underline hover:text-ink-action">
+                <a href="#/docs" data-to={`doc-${id}`} aria-current={current === id ? "true" : undefined}>
                   {label}
                 </a>
               </li>
             ))}
           </ol>
         </nav>
-        <article className="doc grid min-w-0 gap-14">
+        <article className="doc d-article">
           <S id="start">
-            <ol>
-              <li>{t(<>وارد شوید و در صفحهٔ <a href="#/keys">کلیدها</a> یک کلید بسازید.</>, <>Sign in and create a key on the <a href="#/keys">Keys</a> page.</>)}</li>
-              <li>{t(<>متن را همراه با خروجی‌هایی که می‌خواهید به <C>POST /api/v1/decisions</C> بفرستید.</>, <>Send the text with the outputs you want to <C>POST /api/v1/decisions</C>.</>)}</li>
-              <li>{t("برای هر خروجی یک پاسخ با احتمالش برمی‌گردد.", "Each output comes back with an answer and its probability.")}</li>
+            <ol className="d-steps">
+              {steps.map((step, i) => (
+                <li className="d-step" key={i}>
+                  <span className="d-step-n" aria-hidden="true">{fa ? ["۱", "۲", "۳"][i] : i + 1}</span>
+                  <p>{step}</p>
+                </li>
+              ))}
             </ol>
-            <CodeSample baseUrl={base()} />
           </S>
           <S id="auth">
             <p>{t(<>کلید را در سرآیند <C>Authorization</C> بفرستید. کلید با <C>lyl_</C> شروع می‌شود و فقط یک بار، هنگام ساختن، نشان داده می‌شود.</>, <>Send the key in the <C>Authorization</C> header. It starts with <C>lyl_</C> and is shown only once, when it's created.</>)}</p>
@@ -135,13 +192,9 @@ export function Docs({ lang }: { lang: Lang }) {
               <li>{t("هر درخواست حداکثر ۱۲ خروجی و ۲۰٬۰۰۰ نویسه متن.", "Each request takes at most 12 outputs and 20,000 characters of text.")}</li>
               <li>{t("هر خروجی یک بار خواندن متن است؛ خروجی کمتر یعنی پاسخ زودتر.", "Each output is one reading of the text; fewer outputs mean a faster answer.")}</li>
             </ul>
-            <p className="text-body-small text-ink-muted">
-              {t("مرجع فنی کامل با امکان آزمودن: ", "The full technical reference, where you can try every call: ")}
-              <a href={`${API}/docs`} target="_blank" rel="noopener" dir="ltr">{base()}/docs</a>
-            </p>
           </S>
         </article>
       </div>
-    </>
+    </Page>
   );
 }

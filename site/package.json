@@ -2,7 +2,7 @@
   "name": "layla-site",
   "version": "2.0.0",
   "private": true,
-  "description": "Layla's website: the cinematic landing and the playground, services, API docs, sign-in and keys. Builds into ../web, which the API serves.",
+  "description": "Layla's website: the cinematic landing with its live chat, the API docs and the API keys. Builds into ../web, which the API serves.",
   "type": "module",
   "scripts": {
     "dev": "vite",

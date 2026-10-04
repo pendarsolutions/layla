@@ -3,25 +3,11 @@ import { Icon } from "@pendar/ui";
 import { CodeSample, Decision, LaylaFooter, LaylaWordmark, QUESTION_TYPES, SERVICES, type DecisionStatus } from "@pendar/layla";
 import { COPY, type Lang } from "../copy.ts";
 import { API, PUBLIC_API } from "../lib/api.ts";
-import { Chat } from "../chat/Chat.tsx";
-import { HeaderEnd, navLinks } from "../Shell.tsx";
-import { setupLanding } from "./motion.ts";
+import type { Route } from "../lib/router.ts";
+import { Chat, type Ask } from "../chat/Chat.tsx";
+import { TopBar, Words } from "../Shell.tsx";
+import { setupLanding, type LandingControl } from "./motion.ts";
 import { Sky } from "./Sky.tsx";
-
-/** Text as words, one span each, for word-by-word motion; Persian letters join, so never letters. */
-export function Words({ text }: { text: string }) {
-  const words = text.split(" ");
-  return (
-    <>
-      {words.map((w, i) => (
-        <Fragment key={i}>
-          <span className="w">{w}</span>
-          {i < words.length - 1 ? " " : null}
-        </Fragment>
-      ))}
-    </>
-  );
-}
 
 /** The message, word by word, with the phrases Layla's questions turn on marked. */
 function Message({ text, marks }: { text: string; marks: string[] }) {
@@ -55,20 +41,41 @@ function Message({ text, marks }: { text: string; marks: string[] }) {
 }
 
 
-export function Landing({ lang, onLang }: { lang: Lang; onLang: () => void }) {
+/** A sector's example, sent to the live chat by its «امتحان کنید». */
+const askFor = (id: string | null | undefined): Ask | undefined => {
+  const s = SERVICES.find((x) => x.id === id);
+  return s ? { id: Date.now(), text: s.text, outputs: s.outputs } : undefined;
+};
+
+export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => void; route: Route }) {
   const c = COPY[lang];
   const root = useRef<HTMLDivElement>(null);
   // How many sample answers have arrived (3 = all: what shows without motion, and on the server).
   const [step, setStep] = useState(3);
   const [day, setDay] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [ask, setAsk] = useState<Ask>();
   // The samples show the canonical address first (as rendered at build time), then this page's own.
   const [base, setBase] = useState(PUBLIC_API);
   useEffect(() => setBase(location.origin + API), []);
 
+  const control = useRef<LandingControl | null>(null);
   useEffect(() => {
     if (!root.current) return;
-    return setupLanding(root.current, { setStep, setDay });
+    const ctl = setupLanding(root.current, { setStep, setDay, setScrolled, ask: (id) => setAsk(askFor(id)) });
+    control.current = ctl;
+    return () => {
+      ctl.destroy();
+      control.current = null;
+    };
   }, [lang]);
+
+  // An old address (#/play, #/services) lands here: go to its part of the page, then tidy the address.
+  useEffect(() => {
+    if (!route.section) return;
+    control.current?.go(route.section, { service: route.params.get("service") });
+    history.replaceState(null, "", location.pathname + location.search + "#/");
+  }, [route]);
 
   const status = (i: number): DecisionStatus => (i < step ? "done" : i === step ? "reading" : "queued");
 
@@ -78,19 +85,7 @@ export function Landing({ lang, onLang }: { lang: Lang; onLang: () => void }) {
         {c.nav.skip}
       </a>
       <Sky />
-      <header className={`l-top ${day ? "is-day" : ""}`} data-theme={day ? "light" : "dark"}>
-        <a href="#/" className="l-top-mark" aria-label={lang === "fa" ? "لیلا، صفحهٔ اول" : "Layla, home"}>
-          <LaylaWordmark tone={day ? "color" : "reverse"} height={36} />
-        </a>
-        <nav className="l-top-nav" aria-label={lang === "fa" ? "بخش‌ها" : "Sections"}>
-          {navLinks(lang).map((l) => (
-            <a key={l.id} href={l.href}>
-              {l.label}
-            </a>
-          ))}
-        </nav>
-        <HeaderEnd lang={lang} onLang={onLang} className="l-top-end" />
-      </header>
+      <TopBar lang={lang} onLang={onLang} route="" day={day} scrolled={scrolled} />
 
       <main id="main">
         <section className="l-hero l-night" aria-labelledby="l-hero-title">
@@ -214,7 +209,7 @@ export function Landing({ lang, onLang }: { lang: Lang; onLang: () => void }) {
                 <p className="l-sector-for">{s.for}</p>
                 <p className="l-sector-what">{s.what}</p>
                 <blockquote className="l-sector-text">«{s.text}»</blockquote>
-                <a className="l-sector-try" href={`#/play?service=${s.id}`} lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
+                <a className="l-sector-try" href={`#/play?service=${s.id}`} data-scroll="try" data-service={s.id} lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
                   {c.sectors.try}
                   <Icon name="arrow-forward" size={18} />
                 </a>
@@ -244,12 +239,9 @@ export function Landing({ lang, onLang }: { lang: Lang; onLang: () => void }) {
         <div className="l-dawn" aria-hidden="true" />
         {/* Day: the live box and the footer keep the light colours (the dawn ends in plaster). */}
         <div className="l-day" data-theme="light">
-        <section className="l-live" id="try" aria-labelledby="l-live-title">
+        <section className="l-live" id="try" aria-label={c.live.label}>
           <div className="l-live-inner">
-            <div className="l-live-head">
-              <h2 id="l-live-title" className="l-h2">{c.live.title}</h2>
-            </div>
-            <Chat lang={lang} variant="embed" />
+            <Chat lang={lang} ask={ask} />
           </div>
         </section>
         <LaylaFooter />

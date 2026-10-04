@@ -7,11 +7,8 @@ import { useRoute, type Route } from "./lib/router.ts";
 import { SessionProvider } from "./lib/session.tsx";
 import { Docs } from "./pages/Docs.tsx";
 import { Keys } from "./pages/Keys.tsx";
-import { Login } from "./pages/Login.tsx";
-import { Play } from "./pages/Play.tsx";
-import { Services } from "./pages/Services.tsx";
-import { Shell } from "./Shell.tsx";
 
+/** Three pages: the landing (with the live chat at its end), the docs, and the API keys. */
 export function App({ initialLang, initialRoute }: { initialLang: Lang; initialRoute?: Route }) {
   const [lang, setLang] = useState<Lang>(initialLang);
   const route = useRoute(initialRoute);
@@ -23,24 +20,16 @@ export function App({ initialLang, initialRoute }: { initialLang: Lang; initialR
   };
   useEffect(() => applyLang(lang), [lang]);
 
-  const page =
-    route.name === "play" ? <Play lang={lang} params={route.params} />
-    : route.name === "services" ? <Services lang={lang} />
-    : route.name === "docs" ? <Docs lang={lang} />
-    : route.name === "keys" ? <Keys lang={lang} />
-    : route.name === "login" ? <Login lang={lang} />
-    : null;
-
   return (
     <LabelsProvider labels={lang === "en" ? LABELS_EN : LABELS_FA}>
       <ToastProvider>
         <SessionProvider>
-          {page ? (
-            <Shell lang={lang} route={route.name} onLang={onLang}>
-              {page}
-            </Shell>
+          {route.name === "docs" ? (
+            <Docs lang={lang} onLang={onLang} route={route.name} />
+          ) : route.name === "keys" ? (
+            <Keys lang={lang} onLang={onLang} route={route.name} />
           ) : (
-            <Landing lang={lang} onLang={onLang} />
+            <Landing lang={lang} onLang={onLang} route={route} />
           )}
         </SessionProvider>
       </ToastProvider>

@@ -1,35 +1,43 @@
-import type { ReactNode } from "react";
-import { Avatar, Stagger } from "@pendar/ui";
-import { LaylaFooter, LaylaHeader, type LaylaLink } from "@pendar/layla";
+import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Avatar } from "@pendar/ui";
+import { LaylaFooter, LaylaWordmark } from "@pendar/layla";
 import { COPY, type Lang } from "./copy.ts";
+import { Sky } from "./landing/Sky.tsx";
 import type { RouteName } from "./lib/router.ts";
 import { useSession } from "./lib/session.tsx";
+import { setupPage } from "./pages/motion.ts";
 
-export function navLinks(lang: Lang): LaylaLink[] {
-  const n = COPY[lang].nav;
-  return [
-    { id: "play", href: "#/play", label: n.play },
-    { id: "services", href: "#/services", label: n.services },
-    { id: "docs", href: "#/docs", label: n.docs },
-    { id: "keys", href: "#/keys", label: n.keys },
-  ];
+/** Text as words, one span each, for word-by-word motion; Persian letters join, so never letters. */
+export function Words({ text }: { text: string }) {
+  const words = text.split(" ");
+  return (
+    <>
+      {words.map((w, i) => (
+        <Fragment key={i}>
+          <span className="w">{w}</span>
+          {i < words.length - 1 ? " " : null}
+        </Fragment>
+      ))}
+    </>
+  );
 }
 
 /** The end of the top bar: the other language, and the account (or «ورود»). */
-export function HeaderEnd({ lang, onLang, className }: { lang: Lang; onLang: () => void; className?: string }) {
+function HeaderEnd({ lang, onLang, route }: { lang: Lang; onLang: () => void; route: RouteName }) {
   const { me } = useSession();
   const n = COPY[lang].nav;
   return (
-    <div className={`flex items-center gap-3 ${className ?? ""}`}>
-      <button type="button" onClick={onLang} lang={lang === "fa" ? "en" : "fa"} className="cursor-pointer rounded-control px-2 py-1 text-label text-ink-muted hover:text-ink-default">
-        {n.lang}
+    <div className="l-top-end">
+      <button type="button" onClick={onLang} lang={lang === "fa" ? "en" : "fa"} className="l-top-lang">
+        <span className="l-long">{n.lang}</span>
+        <span className="l-short" aria-hidden="true">{n.langShort}</span>
       </button>
       {me ? (
-        <a href="#/keys" className="flex items-center gap-2 rounded-control text-label text-ink-default no-underline" aria-label={me.user.name ?? me.user.email}>
+        <a href="#/keys" className="l-top-me" aria-label={n.account} aria-current={route === "keys" ? "page" : undefined}>
           <Avatar name={me.user.name || me.user.email || "?"} src={me.user.picture} size="sm" />
         </a>
       ) : (
-        <a href="#/login" className="rounded-control px-2 py-1 text-label font-bold text-ink-action no-underline hover:underline">
+        <a href="#/keys" className="l-top-in" aria-current={route === "keys" ? "page" : undefined}>
           {n.signIn}
         </a>
       )}
@@ -37,28 +45,73 @@ export function HeaderEnd({ lang, onLang, className }: { lang: Lang; onLang: () 
   );
 }
 
-/** Every page but the landing: Layla's top bar, the page, and the footer with Pendar's credit. */
-export function Shell({ lang, route, onLang, children }: { lang: Lang; route: RouteName; onLang: () => void; children: ReactNode }) {
+/**
+ * The top bar on every page: Layla's wordmark (home), «امتحان کنید» (the live chat at the end of
+ * the landing), «مستندات», and the language and account. A night bar over the night; a day bar
+ * once the day comes up under it. On the landing its links move along the page instead of leaving it.
+ */
+export function TopBar({ lang, onLang, route, day, scrolled }: { lang: Lang; onLang: () => void; route: RouteName; day: boolean; scrolled: boolean }) {
+  const n = COPY[lang].nav;
+  const here = route === "";
   return (
-    <div className="flex min-h-svh flex-col">
-      <a href="#main" className="skip-link">
-        {COPY[lang].nav.skip}
+    <header className={`l-top ${day ? "is-day" : ""} ${scrolled ? "is-scrolled" : ""}`} data-theme={day ? "light" : "dark"}>
+      <a href="#/" className="l-top-mark" aria-label={n.home} data-scroll={here ? "top" : undefined}>
+        <LaylaWordmark tone={day ? "color" : "reverse"} height={36} />
       </a>
-      <LaylaHeader links={navLinks(lang)} current={route} homeHref="#/" end={<HeaderEnd lang={lang} onLang={onLang} />} />
-      <main id="main" className="mx-auto w-full max-w-6xl flex-1 px-4 pt-10 pb-20 sm:px-8">
-        {children}
-      </main>
-      <LaylaFooter />
-    </div>
+      <nav className="l-top-nav" aria-label={n.label}>
+        <a href="#/play" data-scroll={here ? "try" : undefined}>
+          {n.try}
+        </a>
+        <a href="#/docs" aria-current={route === "docs" ? "page" : undefined}>
+          {n.docs}
+        </a>
+      </nav>
+      <HeaderEnd lang={lang} onLang={onLang} route={route} />
+    </header>
   );
 }
 
-export function PageHead({ title, lead, children }: { title: string; lead?: string; children?: ReactNode }) {
+/**
+ * Every page but the landing, told the landing's way: it opens in the night (the same sky, the
+ * same top bar) with the page's name and what it's for, and dawns into the day, where the work is.
+ */
+export function Page({ lang, onLang, route, head, side, solo, late, children }: {
+  lang: Lang;
+  onLang: () => void;
+  route: RouteName;
+  head: ReactNode;
+  side?: ReactNode;
+  /** The head alone, without a side. */
+  solo?: boolean;
+  /** The side arrives after the page has opened (once the account is known): it rises in by itself. */
+  late?: boolean;
+  children?: ReactNode;
+}) {
+  const root = useRef<HTMLDivElement>(null);
+  const [day, setDay] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    if (!root.current) return;
+    return setupPage(root.current, { setDay, setScrolled });
+  }, [lang, route]);
   return (
-    <Stagger className="mb-10 max-w-3xl">
-      <h1 className="m-0 text-display">{title}</h1>
-      {lead ? <p className="mt-3 mb-0 text-body-large text-ink-muted">{lead}</p> : <span />}
-      {children ? <div className="mt-5">{children}</div> : <span />}
-    </Stagger>
+    <div ref={root} className="landing l-page">
+      <a href="#main" className="skip-link">
+        {COPY[lang].nav.skip}
+      </a>
+      <Sky />
+      <TopBar lang={lang} onLang={onLang} route={route} day={day} scrolled={scrolled} />
+      <main id="main" tabIndex={-1}>
+        <section className={`p-head ${solo ? "is-solo" : ""}`}>
+          <div className="p-head-copy">{head}</div>
+          {solo ? null : <div className={`p-head-side ${late ? "p-late" : ""}`}>{side}</div>}
+        </section>
+        <div className="p-dawn" aria-hidden="true" />
+        <div className="l-day p-day" data-theme="light">
+          {children ? <div className="p-body">{children}</div> : null}
+          <LaylaFooter />
+        </div>
+      </main>
+    </div>
   );
 }

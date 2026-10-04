@@ -296,28 +296,8 @@
   color: var(--color-ink-default);
 }
 
-/* On its own page: centred until the first text; then the answers above, the box held at the bottom. */
-.c-page.is-empty {
-  align-content: center;
-  gap: 28px;
-  min-height: calc(100svh - 300px);
-}
-.c-page.has-turns .c-log {
-  padding-bottom: 24px;
-}
-/* Brought into view above the held box, not behind it. */
-.c-page .c-end {
-  scroll-margin-bottom: 180px;
-}
-.c-page.has-turns .c-dock {
-  position: sticky;
-  bottom: 0;
-  padding: 16px 0 18px;
-  background: linear-gradient(to top, var(--color-surface-page) 72%, transparent);
-}
-
-/* In the landing's live box: a panel that scrolls inside itself. */
-.c-embed {
+/* The panel at the end of the landing: it scrolls inside itself once the answers come. */
+.c-chat {
   grid-template-rows: minmax(0, 1fr) auto;
   gap: 16px;
   height: min(76svh, 720px);
@@ -328,15 +308,15 @@
   background: var(--color-surface-page);
   box-shadow: 0 30px 80px -50px rgb(33 39 89 / 0.5);
 }
-/* Until the first text, the panel is only as tall as its title and box. */
-.c-embed.is-empty {
+/* Until the first text, the panel is only as tall as its line and box. */
+.c-chat.is-empty {
   grid-template-rows: auto auto;
   align-content: center;
   gap: 24px;
   height: auto;
   padding-block: clamp(36px, 6vw, 64px);
 }
-.c-embed .c-log {
+.c-chat .c-log {
   overflow-y: auto;
   overscroll-behavior: contain;
   padding: 4px 2px 8px;

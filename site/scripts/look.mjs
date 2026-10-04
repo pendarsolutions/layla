@@ -81,6 +81,30 @@ if (flags.has("chat")) {
   await page.screenshot({ path: join(out, `L-${tag}-chat-second.png`) });
   console.log("answers:", await scope.evaluate((el) => el.innerText.match(/[۰-۹0-9]+٪|[0-9]+%/g)?.join(" ")));
 }
+if (flags.has("flow")) {
+  // The ways between the pages: a sector's «امتحان کنید» (sent to the live chat), «مستندات», then
+  // «امتحان کنید» from the docs (back to the landing's chat), and the wordmark (to the top).
+  const where = () => page.evaluate(() => ({ top: document.querySelector(".l-top")?.className, hash: location.hash, y: Math.round(scrollY), tryTop: Math.round(document.querySelector("#try")?.getBoundingClientRect().top ?? NaN), turns: document.querySelectorAll(".c-turn").length, h1: document.querySelector("h1")?.textContent }));
+  await page.locator(".l-sector-try").first().evaluate((a) => a.click());
+  await page.waitForTimeout(6000);
+  console.log("sector try:", JSON.stringify(await where()));
+  await page.screenshot({ path: join(out, `L-${tag}-flow-1-sector.png`) });
+  await page.locator(".l-top-nav a").nth(1).click();
+  await page.waitForTimeout(2500);
+  console.log("docs:", JSON.stringify(await where()));
+  await page.screenshot({ path: join(out, `L-${tag}-flow-2-docs.png`) });
+  await page.locator(".l-top-nav a").nth(0).click();
+  await page.waitForTimeout(3000);
+  console.log("try from docs:", JSON.stringify(await where()));
+  await page.screenshot({ path: join(out, `L-${tag}-flow-3-try.png`) });
+  await page.locator(".l-top-mark").click();
+  await page.waitForTimeout(2500);
+  console.log("wordmark:", JSON.stringify(await where()));
+  await page.goto(base + "#/play?service=support", { waitUntil: "networkidle" });
+  await page.waitForTimeout(7000);
+  console.log("old #/play?service=support:", JSON.stringify(await where()));
+  await page.screenshot({ path: join(out, `L-${tag}-flow-4-old-play.png`) });
+}
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].join("\n"));
 await browser.close();
 server.close();

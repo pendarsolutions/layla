@@ -1,24 +1,31 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
-import { transition } from "@pendar/ui";
+import { wipe } from "./motion.ts";
 
-/** The pages, by their address after #/: "" is the landing. Old addresses keep working. */
-export type RouteName = "" | "play" | "services" | "docs" | "keys" | "login";
-export type Route = { name: RouteName; params: URLSearchParams };
-const ORDER: RouteName[] = ["", "play", "services", "docs", "keys", "login"];
-const ALIASES: Record<string, RouteName> = { api: "docs" };
+/**
+ * The pages, by their address after #/: "" is the landing (the story, and the live chat at its
+ * end), "docs" the API docs, "keys" the account's API keys (and signing in). Old addresses keep
+ * working: the playground and the services now live on the landing, signing in on the keys page.
+ */
+export type RouteName = "" | "docs" | "keys";
+export type Section = "try" | "sectors";
+export type Route = { name: RouteName; params: URLSearchParams; section?: Section };
+const NAMES: RouteName[] = ["", "docs", "keys"];
+const ALIASES: Record<string, { name: RouteName; section?: Section }> = {
+  api: { name: "docs" },
+  login: { name: "keys" },
+  play: { name: "", section: "try" },
+  services: { name: "", section: "sectors" },
+};
 
 export function parse(hash: string = typeof location === "undefined" ? "" : location.hash): Route {
   const [path = "", query = ""] = hash.replace(/^#\/?/, "").split("?");
-  const name = (ORDER as string[]).includes(path) ? (path as RouteName) : (ALIASES[path] ?? "");
-  return { name, params: new URLSearchParams(query) };
+  const params = new URLSearchParams(query);
+  if ((NAMES as string[]).includes(path)) return { name: path as RouteName, params };
+  return { ...(ALIASES[path] ?? { name: "" }), params };
 }
 
-/**
- * The current page. Moving between pages slides the new one in from the side you're going
- * towards (Pendar's page transition: from the left in Persian), unless the visitor asked for less
- * motion.
- */
+/** The current page. Moving between pages closes the brick wall over the screen and opens it on the new one. */
 export function useRoute(initial?: Route): Route {
   const [route, setRoute] = useState<Route>(() => initial ?? parse());
   const current = useRef(route);
@@ -26,10 +33,8 @@ export function useRoute(initial?: Route): Route {
   useEffect(() => {
     const onChange = () => {
       const next = parse();
-      const prev = current.current;
-      if (prev.name === next.name) return setRoute(next);
-      const dir = ORDER.indexOf(next.name) >= ORDER.indexOf(prev.name) ? "forward" : "back";
-      transition(dir, () => {
+      if (current.current.name === next.name) return setRoute(next);
+      wipe(() => {
         flushSync(() => setRoute(next));
         window.scrollTo(0, 0);
       });
