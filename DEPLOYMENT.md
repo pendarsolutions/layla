@@ -85,6 +85,10 @@ at shutdown; a hard crash can lose at most that last minute.
   "anonymous_visitors": 57, "active_users": 4, "new_users": 3, "users_total": 21}`.
   Find them with `docker compose logs layla-api | grep daily_stats`. The json-file log rotates (3 × 10 MB), so the
   database is the long-term record.
+- **Panel:** open `/admin.html` on the site (e.g. `https://pendarsolutions.ir/layla/admin.html`) and sign in with
+  `LAYLA_ADMIN_TOKEN` as the password: tiles, requests per day by channel, visitors and active users per day, and a
+  table; 7/30/90 days; refreshes every minute. The password is kept only for that browser tab. The page is
+  `site/public/admin.html` (copied into `web/` by the site build) and needs nothing else.
 - **Table:** `docker compose exec layla-api python -m app.stats_cli --days 30` (add `--json` for the raw report).
 - **HTTP:** set `LAYLA_ADMIN_TOKEN` in `.env`, then
   `curl -H "Authorization: Bearer $LAYLA_ADMIN_TOKEN" http://127.0.0.1:8790/api/v1/admin/stats?days=30`.
