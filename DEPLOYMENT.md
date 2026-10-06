@@ -71,6 +71,26 @@ docker compose up -d
 Automatic at startup (`LAYLA_AUTO_MIGRATE=1`). Check with `docker compose exec layla-api alembic current`. Back up the
 database before a release whose migration drops or rewrites data.
 
+## Traffic: users and requests per day
+
+Every decision request is counted per UTC day by channel: `anonymous` (the playground, no key), `user_key` (an
+account's API key) and `operator_key` (`LAYLA_API_KEYS`), with failed requests and the number of outputs answered.
+Users per day: `anonymous_visitors` (unique per day by a daily-rotating hash of the IP, so no IP is ever stored),
+`active_users` (accounts that made a request with a key), `new_users` (sign-ups) and the account totals. Counts are
+kept in memory and written to Postgres (`traffic_daily`, `visitors_daily`) every `LAYLA_TRAFFIC_FLUSH_S` seconds and
+at shutdown; a hard crash can lose at most that last minute.
+
+- **Logged:** when a UTC day ends, the API writes one line to its log:
+  `{"event": "daily_stats", "day": "2026-10-06", "requests": 412, "failed": 0, "outputs": 1630, "by_channel": {...},
+  "anonymous_visitors": 57, "active_users": 4, "new_users": 3, "users_total": 21}`.
+  Find them with `docker compose logs layla-api | grep daily_stats`. The json-file log rotates (3 × 10 MB), so the
+  database is the long-term record.
+- **Table:** `docker compose exec layla-api python -m app.stats_cli --days 30` (add `--json` for the raw report).
+- **HTTP:** set `LAYLA_ADMIN_TOKEN` in `.env`, then
+  `curl -H "Authorization: Bearer $LAYLA_ADMIN_TOKEN" http://127.0.0.1:8790/api/v1/admin/stats?days=30`.
+  Off (404) while the token is empty.
+- **Behind nginx, set `LAYLA_TRUST_PROXY=1`**, or every visitor has nginx's address and counts as one.
+
 ## Verify
 
 ```bash

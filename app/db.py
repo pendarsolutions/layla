@@ -1,4 +1,4 @@
-"""Accounts storage: users, API keys, daily usage. Postgres in deployment, SQLite for local runs and tests.
+"""Storage: users, API keys, daily usage per key, and daily traffic. Postgres in deployment, SQLite for local runs and tests.
 
 Schema changes go through Alembic (migrations/). `init()` brings the database to the latest revision.
 """
@@ -52,6 +52,27 @@ class UsageDaily(Base):
     key_id: Mapped[int] = mapped_column(ForeignKey("api_keys.id", ondelete="CASCADE"))
     day: Mapped[date] = mapped_column(Date)
     requests: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class TrafficDaily(Base):
+    """Every decision request, per UTC day and channel (anonymous | user_key | operator_key)."""
+    __tablename__ = "traffic_daily"
+    __table_args__ = (UniqueConstraint("day", "channel", name="uq_traffic_day_channel"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[date] = mapped_column(Date)
+    channel: Mapped[str] = mapped_column(String(16))
+    requests: Mapped[int] = mapped_column(Integer, default=0)
+    failed: Mapped[int] = mapped_column(Integer, default=0)
+    outputs: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class VisitorDaily(Base):
+    """One row per anonymous visitor per day: a daily-rotating hash of the IP, never the IP itself."""
+    __tablename__ = "visitors_daily"
+    __table_args__ = (UniqueConstraint("day", "visitor", name="uq_visitor_day"),)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[date] = mapped_column(Date)
+    visitor: Mapped[str] = mapped_column(String(20))
 
 
 class Database:

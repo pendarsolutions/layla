@@ -95,6 +95,7 @@ Interactive reference (Swagger): `/docs` on any running instance; OpenAPI JSON a
 | POST | `/api/v1/auth/logout` | Sign out | CSRF header | `no-store` |
 | GET | `/api/v1/account` | Profile, free quota, premium status, key count | Session | `private, no-store` |
 | GET | `/api/v1/account/usage?days=30` | Requests per day made with your keys (1-90 days) | Session | `private, no-store` |
+| GET | `/api/v1/admin/stats?days=30` | Traffic per day: requests by channel, visitors, active and new users | Admin token | `no-store` |
 | GET | `/api/v1/keys` | Your active keys (at most 5; secrets never returned) | Session | `private, no-store` |
 | POST | `/api/v1/keys` | Create a key; the full secret is in this response only | Session + CSRF | `private, no-store` |
 | DELETE | `/api/v1/keys/{id}` | Revoke one of your keys | Session + CSRF | `private, no-store` |

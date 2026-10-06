@@ -7,6 +7,7 @@
 | Unit | answer shaping (`to_result`), preset labels, the LRU cache | `tests/test_units.py` |
 | API | the HTTP contract against the deterministic `FakeEngine`: success shapes and order, streaming event order, caching, truncation, every validation error, 401 missing/invalid key, anonymous limits (413, 422), 429 with `Retry-After`, 503 busy, cache headers, request-id echo, logs carry context but never text or keys | `tests/test_api.py` |
 | Accounts | sign-in (dev and a verified Google token), sessions, logout, CSRF header, keys (create, list, limit, revoke, someone else's key is 404), the free quota (spend, 402, refund on failure, operator keys unlimited), usage per day, models | `tests/test_accounts.py` |
+| Traffic | requests per day by channel, failed requests not counted, anonymous visitors hashed and unique per day, active/new users, admin endpoint off without a token and closed to operator keys, one `daily_stats` log line per finished day | `tests/test_traffic.py` |
 | Migrations | `alembic upgrade head` → `downgrade base` → `upgrade head` on a fresh database | `tests/test_accounts.py::test_migrations_upgrade_downgrade_upgrade` |
 | Integration | every preset is a question the real `laya` package accepts | `tests/test_units.py::test_every_preset_is_a_valid_laya_question` (skips without `laya`) |
 | Model quality | accuracy of the served model vs. its evaluation, on a stratified 630-row validation sample | `scripts/` bench (run on the host; see below) |
@@ -22,7 +23,7 @@ pip install -r requirements.txt pytest pytest-cov httpx   # install
 python -m pytest -q tests/test_units.py                    # unit
 python -m pytest -q tests/test_api.py                      # API
 python -m pytest -q tests/test_accounts.py                 # accounts, keys, quota, migrations
-python -m pytest -q                                        # all (47 tests)
+python -m pytest -q                                        # all (53 tests)
 python -m pytest -q --cov=app --cov-report=term-missing    # coverage
 ```
 
@@ -30,7 +31,7 @@ python -m pytest -q --cov=app --cov-report=term-missing    # coverage
 
 ## Last run
 
-2026-10-03, Windows: `47 passed`. Site clicked through by hand against the real model locally
+2026-10-06, Windows: `53 passed` (traffic statistics added; the Postgres upserts were compiled, not run, locally). 2026-10-03: Site clicked through by hand against the real model locally
 (`scripts/run_local_api.bat`): sign-in, key creation, three requests with the key (quota 100 → 97, chart shows 3),
 Services → «امتحان کنید» runs in the playground, Docs, phone width.
 

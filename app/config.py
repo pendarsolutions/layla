@@ -57,6 +57,10 @@ class Settings:
     free_requests: int = _int("LAYLA_FREE_REQUESTS", 100)
     max_keys: int = _int("LAYLA_MAX_KEYS", 5)
 
+    # traffic statistics: GET /api/v1/admin/stats needs `Authorization: Bearer <admin token>`; off when empty
+    admin_token: str = os.environ.get("LAYLA_ADMIN_TOKEN", "")
+    traffic_flush_s: int = _int("LAYLA_TRAFFIC_FLUSH_S", 60)
+
     max_inflight: int = _int("LAYLA_MAX_INFLIGHT", 12)
     request_timeout_s: int = _int("LAYLA_REQUEST_TIMEOUT_S", 30)
     serve_web: bool = _bool("LAYLA_SERVE_WEB", True)

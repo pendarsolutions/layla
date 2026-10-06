@@ -24,6 +24,7 @@ from .account_routes import build_router
 from .accounts import Accounts
 from .auth import GoogleVerifier, Sessions
 from .db import Database
+from .traffic import Traffic
 from .catalog import public_catalog
 from .schemas import Catalog, DecisionRequest, DecisionResponse, ErrorResponse, Health, Ready, Result
 
@@ -107,6 +108,7 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
     db = Database(s.database_url)
     accounts = Accounts(db, s.free_requests, s.max_keys)
     sessions = Sessions(secret, s.session_days, s.cookie_secure)
+    traffic = Traffic(db, secret, s.traffic_flush_s)
     google = google or GoogleVerifier(s.google_client_id)
     state = {"runner": None, "error": None}
     inflight = {"n": 0}
@@ -130,7 +132,9 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
             _load()
         else:
             threading.Thread(target=_load, daemon=True).start()
+        traffic.start()
         yield
+        traffic.stop()
 
     app = FastAPI(
         title="Layla API",
@@ -257,6 +261,10 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
                            f"The {s.free_requests} free requests of this account are used up. "
                            "Premium plans are coming soon.")
 
+    def count(request: Request, who: Caller, ok: bool, outputs: int):
+        channel = "anonymous" if who.anonymous else ("user_key" if who.user_id is not None else "operator_key")
+        traffic.count(channel, ok, outputs, client_ip(request) if who.anonymous else "")
+
     async def settle(who: Caller, ok: bool):
         if who.user_id is None:
             return
@@ -326,6 +334,7 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
             raise ApiError(504, "timeout", "The request took too long. Send shorter text or fewer outputs.")
         finally:
             inflight["n"] -= 1
+            count(request, who, ok, len(items) if ok else 0)
             await settle(who, ok)
         body = {"request_id": request.state.request_id, "model": s.model_name, "results": results,
                 "truncated": truncated, "usage": {"input_tokens": tokens},
@@ -371,11 +380,29 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
                                   "message": "The request took too long."}}) + "\n"
             finally:
                 inflight["n"] -= 1
+                count(request, who, delivered > 0, delivered)
                 await settle(who, delivered > 0)
 
         return StreamingResponse(events(), media_type="application/x-ndjson",
                                  headers={**NO_STORE, "X-Accel-Buffering": "no"})
 
+    @app.get("/api/v1/admin/stats", tags=["operations"], summary="Traffic per day (admin)",
+             description="Requests per UTC day by channel (anonymous playground, user keys, operator keys), failed "
+                         "requests, anonymous visitors (unique per day; no IPs are stored), active and new users, "
+                         "and the account totals. Auth: `Authorization: Bearer <LAYLA_ADMIN_TOKEN>`; 404 when no admin "
+                         "token is configured. Not cacheable.",
+             responses={401: {"model": ErrorResponse}, 404: {"model": ErrorResponse}})
+    async def admin_stats(request: Request, days: int = 30,
+                          cred: Optional[HTTPAuthorizationCredentials] = Depends(bearer)):
+        if not s.admin_token:
+            raise ApiError(404, "not_found", "Not found.")
+        if cred is None or not hmac.compare_digest(cred.credentials.encode(), s.admin_token.encode()):
+            raise ApiError(401, "invalid_key", "The admin token is not valid.", {"WWW-Authenticate": "Bearer"})
+        request.state.caller = "admin"
+        body = await run_in_threadpool(traffic.report, max(1, min(days, 366)))
+        return JSONResponse(body, headers=NO_STORE)
+
+    app.state.traffic = traffic
     app.include_router(build_router(s, accounts, sessions, google, limiter, client_ip, ApiError, ErrorResponse))
 
     if s.serve_web and WEB.exists():
