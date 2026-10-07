@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { CodeBlock, Icon } from "@pendar/ui";
 import { useSession } from "../lib/session.tsx";
-import { CodeSample, OutputsTable } from "@pendar/layla";
+import { CATALOG, CATALOG_EN, CodeSample, OUTPUT_ICONS, OutputsTable, QUESTION_TYPES, type CatalogItem } from "@pendar/layla";
+import { labelIn } from "../en.ts";
 import { COPY, type Lang } from "../copy.ts";
 import { API, PUBLIC_API } from "../lib/api.ts";
 import type { RouteName } from "../lib/router.ts";
@@ -46,6 +47,29 @@ const ERRORS: [string, string, string, string][] = [
 ];
 
 /**
+ * The ready-made outputs on a phone, where the kit's four-column table has no room: each one
+ * stacked, its name and kind, its id, and the answers it can give.
+ */
+function OutputsList({ catalog, lang }: { catalog: CatalogItem[]; lang: Lang }) {
+  const fa = lang === "fa";
+  return (
+    <ul className="d-outputs-list">
+      {catalog.map((o) => (
+        <li key={o.id}>
+          <p className="d-out-head">
+            <Icon name={OUTPUT_ICONS[o.id] ?? "list"} />
+            <strong>{fa ? o.title : (CATALOG_EN[o.id]?.title ?? o.title)}</strong>
+            <span className="d-out-kind">{fa ? QUESTION_TYPES[o.type].fa : QUESTION_TYPES[o.type].en}</span>
+          </p>
+          <code dir="ltr">{o.id}</code>
+          <p className="d-out-opts">{o.options.join(fa ? "، " : ", ")}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * What the API does, at a glance: a request goes in, an answer per question comes out. In the
  * night beside the page's name; its answers arrive one by one, as the API sends them.
  */
@@ -84,8 +108,8 @@ function Exchange({ lang }: { lang: Lang }) {
           {rows.map(([id, label, p], i) => (
             <li key={id} style={{ ["--i" as string]: i }}>
               <code>{id}</code>
-              <strong dir="rtl" lang="fa">
-                {label}
+              <strong dir="auto" lang={lang}>
+                {labelIn(label, lang)}
               </strong>
               <span className="x-meter">
                 <span style={{ width: `${p * 100}%` }} />
@@ -108,6 +132,9 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
   const { me } = useSession();
   const fa = lang === "fa";
   const t = (p: ReactNode, e: ReactNode) => (fa ? p : e);
+  // In English, each answer's meaning, then the exact Persian label the API sends.
+  // The Persian is isolated (FSI…PDI) so its brackets don't turn round inside the English line.
+  const outputs = fa ? CATALOG : CATALOG.map((o) => ({ ...o, options: o.options.map((x) => `${labelIn(x, "en")} (⁨${x}⁩)`) }));
   const groups: [string, [string, string][]][] = fa
     ? [
         ["شروع", [["start", "سه قدم تا اولین پاسخ"]]],
@@ -249,7 +276,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
             <p>{t(<>پاسخ‌ها به همان ترتیب درخواست برمی‌گردند (نمونه‌اش در قدم ۳). هر پاسخ در <C>results</C>:</>, <>Answers come back in the order asked (step 3 shows one). Each answer in <C>results</C>:</>)}</p>
             <ul>
               <li><C>id</C>{t(": همان شناسه‌ای که خودتان گذاشتید.", ": the id you gave the output.")}</li>
-              <li><C>answer</C>{t(" و ", " and ")}<C>label</C>{t(": گزینهٔ برگزیده؛ label به زبان ساده.", ": the option picked; label is it in words.")}</li>
+              <li><C>answer</C>{t(" و ", " and ")}<C>label</C>{t(": گزینهٔ برگزیده؛ label به زبان ساده.", ": the option picked; label is it in words, the words of your options (the ready-made outputs answer in Persian; the table below gives each in English).")}</li>
               <li><C>probability</C>{t(": احتمال آن گزینه، از ۰ تا ۱.", ": that option's probability, from 0 to 1.")}</li>
               <li><C>options</C>{t(": همهٔ گزینه‌ها با احتمال هر کدام.", ": every option with its probability.")}</li>
               <li><C>confidence</C>{t(": چقدر از بقیه جلوتر است؛ کم یعنی «نامطمئن»، آن را به یک نفر بسپارید.", ": how far ahead of the rest it is; low means unsure, so pass it to a person.")}</li>
@@ -262,7 +289,11 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
           </S>
           <S id="presets">
             <p>{t(<>این خروجی‌ها با همان عبارت‌هایی پرسیده می‌شوند که لیلا با آن‌ها آموزش دیده، پس دقیق‌ترین پاسخ را می‌دهند. فهرست کامل از <C>GET /api/v1/outputs</C> می‌آید.</>, <>These outputs are asked in the very words Layla was trained on, so they give its best answers. The full list comes from <C>GET /api/v1/outputs</C>.</>)}</p>
-            <OutputsTable />
+            {/* In English: each answer's meaning, then the exact Persian label the API sends. */}
+            <div className="d-outputs-table">
+              <OutputsTable catalog={outputs} />
+            </div>
+            <OutputsList catalog={outputs} lang={lang} />
           </S>
           <S id="errors">
             <p>{t("هر خطا یک کد ثابت و یک پیام دارد:", "Every error has a fixed code and a message:")}</p>

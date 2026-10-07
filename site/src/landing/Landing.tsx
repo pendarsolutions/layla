@@ -6,6 +6,7 @@ import { API, PUBLIC_API } from "../lib/api.ts";
 import type { Route } from "../lib/router.ts";
 import { Chat, type Ask } from "../chat/Chat.tsx";
 import { TopBar, Words } from "../Shell.tsx";
+import { SERVICES_EN } from "../en.ts";
 import { setupLanding, type LandingControl } from "./motion.ts";
 import { Sky } from "./Sky.tsx";
 
@@ -116,14 +117,16 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
             <h2 id="l-message-title" className="l-h2">{c.message.title}</h2>
             <p className="l-p">{c.message.body}</p>
           </div>
-          <figure className="l-card l-message-card" data-theme="light" lang="fa" dir="rtl">
+          <figure className="l-card l-message-card" data-theme="light">
             <figcaption className="l-card-label">
               <Icon name="chat" size={18} />
-              {lang === "fa" ? c.message.label : "پیام مشتری"}
+              {c.message.label}
             </figcaption>
-            <p className="l-message-text">
+            {/* What Layla reads is the Persian; an English page gives its meaning under it. */}
+            <p className="l-message-text" lang="fa" dir="rtl">
               <Message text={c.message.text} marks={c.message.marks} />
             </p>
+            {c.message.gloss ? <p className="l-gloss">{c.message.gloss}</p> : null}
           </figure>
         </section>
 
@@ -132,7 +135,7 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
             <h2 id="l-questions-title" className="l-h2">{c.questions.title}</h2>
             <p className="l-p">{c.questions.body}</p>
           </div>
-          <ol className="l-qs" lang="fa" dir="rtl">
+          <ol className="l-qs">
             {c.questions.list.map((q) => (
               <li className="l-q" key={q.id}>
                 <p className="l-q-kind">
@@ -163,7 +166,7 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
             <h2 id="l-answers-title" className="l-h2">{c.answers.title}</h2>
             <p className="l-p">{c.answers.body}</p>
           </div>
-          <div className="l-decisions" data-theme="light" lang="fa" dir="rtl">
+          <div className="l-decisions" data-theme="light">
             <span className="l-sample">{c.answers.sample}</span>
             {c.questions.list.map((q, i) => (
               <Decision key={q.id} title={q.question} icon={QUESTION_TYPES[q.type].icon} type={q.type} status={status(i)} result={i < step ? c.answers.results[i] : undefined} />
@@ -186,9 +189,21 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
             </div>
             <ol className="l-stream" dir="ltr" aria-hidden="true">
               <li><span className="l-ms">0 ms</span>{`{"event": "start", "outputs": ["team", "cancel", "urgency"]}`}</li>
-              <li><span className="l-ms">31 ms</span>{`{"event": "result", "result": {"id": "team", "label": "پشتیبانی", "probability": 0.81}}`}</li>
-              <li><span className="l-ms">63 ms</span>{`{"event": "result", "result": {"id": "cancel", "label": "بله", "probability": 0.79}}`}</li>
-              <li><span className="l-ms">94 ms</span>{`{"event": "result", "result": {"id": "urgency", "label": "مهم", "probability": 0.58}}`}</li>
+              {/* The labels come back in the options' own words (Persian here); in English the lines leave them out. */}
+              {(
+                [
+                  ["31", "team", "مالی", "0.85"],
+                  ["63", "cancel", "بله", "0.86"],
+                  ["94", "urgency", "مهم", "0.75"],
+                ] as const
+              ).map(([ms, id, label, p]) => (
+                <li key={id}>
+                  <span className="l-ms">{ms} ms</span>
+                  {lang === "fa"
+                    ? `{"event": "result", "result": {"id": "${id}", "label": "${label}", "probability": ${p}}}`
+                    : `{"event": "result", "result": {"id": "${id}", "probability": ${p}, …}}`}
+                </li>
+              ))}
               <li><span className="l-ms">95 ms</span>{`{"event": "done", "usage": {"input_tokens": 51}}`}</li>
             </ol>
           </div>
@@ -200,21 +215,28 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
             <p className="l-p">{c.sectors.body}</p>
           </div>
           <div className="l-track">
-            {SERVICES.map((s) => (
-              <article className="l-sector" key={s.id} lang="fa" dir="rtl">
+            {SERVICES.map((s) => {
+              const en = lang === "en" ? SERVICES_EN[s.id] : undefined;
+              return (
+              <article className="l-sector" key={s.id}>
                 <span className="l-sector-icon" aria-hidden="true">
                   <Icon name={s.icon} size={28} />
                 </span>
-                <h3 className="l-sector-title">{s.title}</h3>
-                <p className="l-sector-for">{s.for}</p>
-                <p className="l-sector-what">{s.what}</p>
-                <blockquote className="l-sector-text">«{s.text}»</blockquote>
-                <a className="l-sector-try" href={`#/play?service=${s.id}`} data-scroll="try" data-service={s.id} lang={lang} dir={lang === "fa" ? "rtl" : "ltr"}>
+                <h3 className="l-sector-title">{en?.title ?? s.title}</h3>
+                <p className="l-sector-for">{en?.for ?? s.for}</p>
+                <p className="l-sector-what">{en?.what ?? s.what}</p>
+                {/* The example is what Layla reads, so it stays Persian; in English its meaning follows. */}
+                <blockquote className="l-sector-text" lang="fa" dir="rtl">
+                  «{s.text}»
+                </blockquote>
+                {en ? <p className="l-gloss l-sector-gloss">{en.gloss}</p> : null}
+                <a className="l-sector-try" href={`#/play?service=${s.id}`} data-scroll="try" data-service={s.id}>
                   {c.sectors.try}
                   <Icon name="arrow-forward" size={18} />
                 </a>
               </article>
-            ))}
+              );
+            })}
           </div>
         </section>
 

@@ -286,6 +286,8 @@ html.lenis body {
 /* The hero. */
 .l-hero {
   display: grid;
+  /* One column the width of the screen: never as wide as the wordmark or the longest word. */
+  grid-template-columns: minmax(0, 1fr);
   align-content: center;
   min-height: 100svh;
   padding: 96px var(--gutter) 64px;
@@ -294,26 +296,35 @@ html.lenis body {
 .l-hero-mark {
   justify-self: start;
   width: max-content;
+  max-width: 100%;
   margin-bottom: 36px;
   line-height: 0;
 }
+/* The wordmark is nine bricks tall, sized here in whole-pixel bricks (15, 21, 27, 33 px). The kit's
+   laid wordmark sets its size inline, so these have to win over it; the English one is 18 bricks
+   wide and needs the smaller sizes on a phone. */
 .l-hero-mark > svg {
-  width: auto;
-  height: 135px;
+  width: auto !important;
+  height: 135px !important;
+}
+@media (max-width: 359px) {
+  .l-hero-mark > svg {
+    height: 108px !important;
+  }
 }
 @media (min-width: 640px) {
   .l-hero-mark > svg {
-    height: 189px;
+    height: 189px !important;
   }
 }
 @media (min-width: 1100px) {
   .l-hero-mark > svg {
-    height: 243px;
+    height: 243px !important;
   }
 }
 @media (min-width: 1700px) {
   .l-hero-mark > svg {
-    height: 297px;
+    height: 297px !important;
   }
 }
 .l-hero-title {
@@ -602,6 +613,26 @@ html.lenis body {
   font-size: 15px;
   line-height: 1.9;
 }
+/* An English page's meaning of a Persian example, under it (src/en.ts). */
+.l-gloss {
+  margin: 14px 0 0;
+  color: var(--color-ink-muted);
+  font-size: 15px;
+  line-height: 1.7;
+}
+/* In English the Persian quote and its meaning read as one block, ruled on the page's start side. */
+:root[dir="ltr"] .l-sector-text {
+  border-inline-start: 0;
+  border-left: 3px solid var(--color-product-500);
+}
+.l-sector-gloss {
+  margin: -12px 0 0;
+  padding: 0 14px 12px;
+  border-left: 3px solid var(--color-product-500);
+  background: rgb(255 255 255 / 0.04);
+  color: var(--night-muted);
+  font-size: 14px;
+}
 .l-sector-try {
   display: inline-flex;
   align-items: center;
@@ -664,6 +695,74 @@ html.lenis body {
   max-width: 72rem;
   margin: 0 auto;
   padding: 88px var(--gutter) 48px;
+}
+
+/*
+ * Phones, tablets upright and short screens (the same test as the motion's `wide`): nothing is
+ * pinned here, so a scene doesn't need a screen of its own. Each takes the height of what it holds,
+ * and the story reads on without stretches of empty sky between scenes.
+ */
+@media (max-width: 899px), (max-height: 599px) {
+  .l-scene,
+  .l-speed {
+    min-height: 0;
+    padding: 72px var(--gutter) 56px;
+  }
+  .l-sectors {
+    min-height: 0;
+    padding: 72px 0 56px;
+  }
+  .l-sectors-head {
+    margin-bottom: 28px;
+  }
+  .l-rule {
+    min-height: 72svh;
+    padding: 72px var(--gutter);
+  }
+  .l-dawn {
+    height: 36vh;
+  }
+  /* The answers' NDJSON lines wrap rather than run off the edge. */
+  .l-stream li {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .l-ms {
+    min-width: 52px;
+  }
+  .l-live-inner {
+    padding: 64px var(--gutter) 40px;
+  }
+}
+
+/*
+ * Very wide screens: the content keeps a measure of about 1760px in the middle (the gutter grows)
+ * instead of drifting to the two edges, and the type steps up with it. The night still fills the
+ * screen; only the words and the cards gather.
+ */
+@media (min-width: 1960px) {
+  :root {
+    --gutter: max(96px, calc((100vw - 1760px) / 2));
+  }
+  .l-hero-title {
+    font-size: 4.4rem;
+  }
+  .l-h2 {
+    font-size: 3.9rem;
+  }
+  .l-p,
+  .l-hero-lead {
+    font-size: 1.45rem;
+  }
+  .l-rule-text {
+    font-size: 5.4rem;
+  }
+}
+@media (min-width: 2300px) {
+  /* The kit's components are measured in rem: they grow with the page's words. */
+  html {
+    font-size: 112.5%;
+  }
 }
 
 /* The wall laid over the screen during a long in-page jump. */
@@ -755,6 +854,56 @@ html.lenis body {
   position: sticky;
   top: 96px;
   align-self: start;
+}
+/* The ready-made outputs: the kit's table where it has room, a stacked list on a phone. */
+.d-outputs-list {
+  display: none;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.d-outputs-list li {
+  display: grid;
+  gap: 6px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-line-default);
+}
+.d-out-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+}
+.d-out-head svg {
+  color: var(--color-ink-muted);
+}
+.d-out-kind {
+  margin-inline-start: auto;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+.d-outputs-list code {
+  justify-self: start;
+  font: 13px/1.5 var(--font-code);
+}
+.d-out-opts {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+@media (max-width: 719px) {
+  .d-outputs-table {
+    display: none;
+  }
+  .d-outputs-list {
+    display: grid;
+  }
+  .a-chart {
+    gap: 2px;
+  }
 }
 .d-toc ol {
   display: grid;

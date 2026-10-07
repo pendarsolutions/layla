@@ -130,6 +130,29 @@ if (flags.has("bottom")) {
   console.log("bottom:", JSON.stringify(await page.evaluate(() => ({ y: Math.round(scrollY), max: document.documentElement.scrollHeight - innerHeight, page: Math.round(document.querySelector(".landing").getBoundingClientRect().height), top: document.querySelector(".l-top").className }))));
   await page.screenshot({ path: join(out, `L-${tag}-bottom.png`) });
 }
+if (flags.has("leaks")) {
+  // Every piece of text with Persian letters an English screen shows, and where it sits (the
+  // element's first class). Text hidden from everyone (aria-hidden, sr-only) is left out.
+  const found = await page.evaluate(() => {
+    const out = [];
+    const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+      const text = n.textContent.trim();
+      if (!/[؀-ۿ]/.test(text)) continue;
+      const el = n.parentElement;
+      if (!el || el.closest("[aria-hidden=true], .sr-only, script, style, template") || !el.getClientRects().length) continue;
+      out.push(`${el.closest("[class]")?.className.toString().split(" ")[0] ?? el.tagName}: ${text.slice(0, 100)}`);
+    }
+    // Attributes people meet too: placeholders, labels read out, titles.
+    for (const el of document.querySelectorAll("[placeholder], [aria-label], [title], [alt]"))
+      for (const a of ["placeholder", "aria-label", "title", "alt"]) {
+        const v = el.getAttribute(a);
+        if (v && /[؀-ۿ]/.test(v)) out.push(`@${a} on ${el.tagName.toLowerCase()}.${el.className.toString().split(" ")[0]}: ${v.slice(0, 100)}`);
+      }
+    return [...new Set(out)];
+  });
+  console.log(["PERSIAN ON THIS SCREEN:", ...found].join("\n  "));
+}
 if (errors.length) console.log("ERRORS:\n" + [...new Set(errors)].join("\n"));
 await browser.close();
 server.close();

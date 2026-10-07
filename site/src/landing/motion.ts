@@ -96,7 +96,7 @@ export function setupLanding(root: HTMLElement, { setStep, setDay, setScrolled, 
       return { x: b.left - a.left, y: b.top - a.top, s: b.height / a.height };
     };
     gsap
-      .timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: hero, start: "top top", end: "+=70%", pin: true, scrub: 0.6, invalidateOnRefresh: true } })
+      .timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: hero, start: "top top", end: wide ? "+=70%" : "+=40%", pin: true, scrub: 0.6, invalidateOnRefresh: true } })
       .fromTo(copy, { y: 0, opacity: 1 }, { y: -80, opacity: 0, duration: 0.45, ease: "power1.in" }, 0)
       .fromTo(mark, { x: 0, y: 0, scale: 1, transformOrigin: "0 0" }, { x: () => handoff().x, y: () => handoff().y, scale: () => handoff().s, duration: 0.85, ease: "power2.inOut" }, 0)
       .fromTo(topMark, { opacity: 0 }, { opacity: 1, duration: 0.05, ...N }, 0.85)
@@ -136,7 +136,7 @@ export function setupLanding(root: HTMLElement, { setStep, setDay, setScrolled, 
         opacity: 1,
         ease: "none",
         stagger,
-        scrollTrigger: { trigger: section, start: "top 85%", end: "top 20%", scrub: 0.6, invalidateOnRefresh: true },
+        scrollTrigger: { trigger: section, start: wide ? "top 85%" : "top 95%", end: wide ? "top 20%" : "top 50%", scrub: 0.6, invalidateOnRefresh: true },
       });
 
     /* ---- A message arrives, word by word; the phrases that matter light up ---- */

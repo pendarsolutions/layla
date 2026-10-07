@@ -4,6 +4,7 @@
  * one of your options and says how sure it is. The kit's components bring their own words.
  */
 import type { QuestionType, Result } from "@pendar/layla";
+import { resultIn } from "./en.ts";
 
 export type Lang = "fa" | "en";
 
@@ -13,7 +14,8 @@ export interface Copy {
   title: string;
   nav: { try: string; api: string; signIn: string; account: string; lang: string; langShort: string; skip: string; home: string; label: string };
   hero: { title: string; lead: string; try: string; key: string };
-  message: { title: string; body: string; label: string; text: string; marks: string[] };
+  /** `gloss`: the message in the reader's language when that isn't Persian (Layla reads the Persian). */
+  message: { title: string; body: string; label: string; text: string; marks: string[]; gloss?: string };
   questions: { title: string; body: string; list: Q[] };
   rule: string;
   answers: { title: string; body: string; sample: string; results: Result[] };
@@ -79,7 +81,17 @@ const QUESTIONS_FA: Q[] = [
   { id: "urgency", type: "scale", kind: "یک سطح", question: "رسیدگی به این پیام چقدر عجله دارد؟", options: ["عادی", "مهم", "فوری"] },
 ];
 
-/** Answers to show in the story, marked as an example: Layla's real ones come from the live box below. */
+/** What a page in English shows for the same three questions; they still go to Layla in Persian. */
+const QUESTIONS_EN: Q[] = [
+  { id: "team", type: "choice", kind: "One of several", question: "Which team is this message for?", options: ["Sales", "Support", "Billing"] },
+  { id: "cancel", type: "yes_no", kind: "Yes or no", question: "Does the customer want to cancel the order?", options: ["Yes", "No"] },
+  { id: "urgency", type: "scale", kind: "A level", question: "How urgent is this message?", options: ["Normal", "Important", "Urgent"] },
+];
+
+/**
+ * The story's answers, marked as an example: Layla's own for this message and these questions
+ * (asked live on 2026-10-07; the live chat below answers for real).
+ */
 const opt = (key: string, label: string, probability: number) => ({ key, label, probability });
 const result = (r: Pick<Result, "id" | "type" | "answer" | "label" | "probability" | "options"> & { level?: number }): Result => ({
   confidence: r.probability,
@@ -89,9 +101,9 @@ const result = (r: Pick<Result, "id" | "type" | "answer" | "label" | "probabilit
   ...r,
 });
 const RESULTS: Result[] = [
-  result({ id: "team", type: "choice", answer: "پشتیبانی", label: "پشتیبانی", probability: 0.81, options: [opt("پشتیبانی", "پشتیبانی", 0.81), opt("فروش", "فروش", 0.12), opt("مالی", "مالی", 0.07)] }),
-  result({ id: "cancel", type: "yes_no", answer: "yes", label: "بله", probability: 0.79, options: [opt("yes", "بله", 0.79), opt("no", "نه", 0.21)] }),
-  result({ id: "urgency", type: "scale", answer: "1", label: "مهم", probability: 0.58, level: 1, options: [opt("0", "عادی", 0.12), opt("1", "مهم", 0.58), opt("2", "فوری", 0.3)] }),
+  result({ id: "team", type: "choice", answer: "مالی", label: "مالی", probability: 0.85, options: [opt("مالی", "مالی", 0.85), opt("پشتیبانی", "پشتیبانی", 0.08), opt("فروش", "فروش", 0.07)] }),
+  result({ id: "cancel", type: "yes_no", answer: "yes", label: "بله", probability: 0.86, options: [opt("yes", "بله", 0.86), opt("no", "خیر", 0.14)] }),
+  result({ id: "urgency", type: "scale", answer: "1", label: "مهم", probability: 0.75, level: 1, options: [opt("0", "عادی", 0.04), opt("1", "مهم", 0.75), opt("2", "فوری", 0.21)] }),
 ];
 
 const faNum = (n: number) => new Intl.NumberFormat("fa-IR").format(n);
@@ -228,18 +240,19 @@ const en: Copy = {
     label: "Customer message",
     text: SUPPORT_TEXT,
     marks: fa.message.marks,
+    gloss: "Hi, I placed my order three days ago and still haven't heard anything. If it doesn't arrive by tomorrow I'll cancel it, and I want my money back.",
   },
   questions: {
     title: "You ask your questions",
-    body: "Each question brings its own options: one of several, yes or no, or a level. They can be asked in Persian.",
-    list: QUESTIONS_FA,
+    body: "Each question brings its own options: one of several, yes or no, or a level. Layla answers best when they're asked in Persian; here they're shown in English.",
+    list: QUESTIONS_EN,
   },
   rule: "Layla never writes text of its own. Every answer is one of the options you gave it, with its probability.",
   answers: {
     title: "Layla picks one and says how sure it is",
     body: "When the options are close, the answer is marked unsure: pass that message to a person.",
     sample: "Example",
-    results: RESULTS,
+    results: RESULTS.map((r) => resultIn(r, "en")),
   },
   speed: {
     title: "Answers arrive one by one",

@@ -15,6 +15,7 @@ import {
   type Result,
 } from "@pendar/layla";
 import { COPY, type Lang } from "../copy.ts";
+import { EXAMPLES_EN, resultIn, titleIn } from "../en.ts";
 import { API } from "../lib/api.ts";
 
 /**
@@ -44,12 +45,14 @@ type Turn = {
 
 function titleOf(o: OutputSpec, lang: Lang): string {
   if (o.preset) return (lang === "en" ? CATALOG_EN[o.preset]?.title : undefined) ?? CATALOG.find((c) => c.id === o.preset)?.title ?? o.preset;
-  return o.question ?? o.id;
+  return titleIn(o, lang) ?? o.id;
 }
 
 /** One answer: the question's name, the option Layla picked and how sure it is; open it for every option. */
-function Answer({ o, result, state, lang }: { o: OutputSpec; result?: Result; state: "queued" | "reading" | "done" | "failed"; lang: Lang }) {
+function Answer({ o, result: sent, state, lang }: { o: OutputSpec; result?: Result; state: "queued" | "reading" | "done" | "failed"; lang: Lang }) {
   const w = useWords();
+  // The API answers in the options' own words; the page's own options are shown in the reader's language.
+  const result = sent && resultIn(sent, lang);
   const [open, setOpen] = useState(false);
   const unsure = result ? isUnsure(result) : false;
   return (
@@ -113,7 +116,7 @@ function Questions({ open, onClose, outputs, setOutputs, lang }: { open: boolean
             <div className="flex flex-wrap gap-2">
               {customs.map((q) => (
                 <RemovableChip key={q.id} onRemove={() => setOutputs(outputs.filter((o) => o.id !== q.id))}>
-                  {q.question}
+                  {titleIn(q, lang) ?? q.question}
                 </RemovableChip>
               ))}
             </div>
@@ -308,7 +311,7 @@ export function Chat({ lang, ask }: { lang: Lang; ask?: Ask }) {
                   void send(ex.text, ex.outputs);
                 }}
               >
-                {ex.title}
+                {lang === "en" ? (EXAMPLES_EN[ex.id] ?? ex.title) : ex.title}
               </button>
             ))}
           </div>
