@@ -51,7 +51,7 @@ function HeaderEnd({ lang, onLang, route }: { lang: Lang; onLang: () => void; ro
   const n = COPY[lang].nav;
   return (
     <div className="l-top-end">
-      <button type="button" onClick={onLang} lang={lang === "fa" ? "en" : "fa"} className="l-top-lang">
+      <button type="button" onClick={onLang} lang={lang === "fa" ? "en" : "fa"} className="l-top-lang" aria-label={n.lang}>
         <span className="l-long">{n.lang}</span>
         <span className="l-short" aria-hidden="true">{n.langShort}</span>
       </button>

@@ -219,6 +219,15 @@ html.lenis body {
     padding: 0 6px;
     font-size: 13px;
   }
+  /* «فا» / EN alone is two letters: keep a 44px target, and set «فا» 2px up so it doesn't read smaller
+     than the Latin beside it. */
+  .l-top-lang {
+    justify-content: center;
+    min-width: 44px;
+  }
+  .l-top-lang[lang="fa"] {
+    font-size: 15px;
+  }
   .l-long {
     display: none;
   }
@@ -479,6 +488,11 @@ html.lenis body {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 16px;
   color: var(--color-ink-default);
+}
+/* The kit's «همهٔ گزینه‌ها» is a 21px caption line: a 44px target, in the same place. */
+.l-decisions summary {
+  padding-block: 12px;
+  margin-block: -12px;
 }
 .l-sample {
   position: absolute;
