@@ -24,7 +24,8 @@ export function ease(name: "enter" | "settle" | "standard"): string {
 
 /** The smooth scroll every page shares, driven by GSAP's clock so the scrubbed scenes stay in step. */
 export function smooth(): { lenis: Lenis; stop: () => void } {
-  const lenis = new Lenis({ lerp: 0.09, smoothWheel: true, autoRaf: false });
+  // A dialog scrolls itself: left to Lenis, the wheel moved the page behind and never the dialog.
+  const lenis = new Lenis({ lerp: 0.09, smoothWheel: true, autoRaf: false, prevent: (node) => node.nodeName === "DIALOG" });
   lenis.on("scroll", ScrollTrigger.update);
   const raf = (t: number) => lenis.raf(t * 1000);
   gsap.ticker.add(raf);

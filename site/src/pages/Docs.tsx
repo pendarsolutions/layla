@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { CodeBlock, Icon } from "@pendar/ui";
 import { useSession } from "../lib/session.tsx";
 import { CATALOG, CATALOG_EN, CodeSample, OUTPUT_ICONS, OutputsTable, QUESTION_TYPES, type CatalogItem } from "@pendar/layla";
@@ -14,6 +14,19 @@ const C = ({ children }: { children: ReactNode }) => (
     {children}
   </code>
 );
+
+/** One reference section, titled from the contents. It lives out here so that marking the section
+ *  being read doesn't make every section new (they would lose the contents' watch and their rise). */
+const Titles = createContext<Record<string, string>>({});
+function S({ id, children }: { id: string; children: ReactNode }) {
+  const title = useContext(Titles);
+  return (
+    <section id={`doc-${id}`} className="d-sec p-rise">
+      <h2 className="d-h2">{title[id]}</h2>
+      {children}
+    </section>
+  );
+}
 
 const REQUEST = `{
   "text": "سفارشم سه روز است نرسیده. لطفاً پولم را برگردانید.",
@@ -146,12 +159,6 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
       ];
   const toc = groups.flatMap(([, items]) => items);
   const title = Object.fromEntries(toc);
-  const S = ({ id, children }: { id: string; children: ReactNode }) => (
-    <section id={`doc-${id}`} className="d-sec p-rise">
-      <h2 className="d-h2">{title[id]}</h2>
-      {children}
-    </section>
-  );
 
   // The contents mark the section being read.
   const [current, setCurrent] = useState("start");
@@ -212,7 +219,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
               <ol>
                 {items.map(([id, name]) => (
                   <li key={id}>
-                    <a href="#/docs" data-to={`doc-${id}`} aria-current={current === id ? "true" : undefined}>
+                    <a href="#/docs" data-to={`doc-${id}`} aria-current={current === id ? "location" : undefined}>
                       {name}
                     </a>
                   </li>
@@ -226,6 +233,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
           </a>
         </nav>
         <article className="doc d-article">
+          <Titles.Provider value={title}>
           <S id="start">
             <ol className="d-path">
               <li className="d-stage">
@@ -320,6 +328,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
               <li>{t("هر خروجی یک بار خواندن متن است؛ خروجی کمتر یعنی پاسخ زودتر.", "Each output is one reading of the text; fewer outputs mean a faster answer.")}</li>
             </ul>
           </S>
+          </Titles.Provider>
         </article>
       </div>
     </Page>

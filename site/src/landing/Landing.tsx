@@ -5,7 +5,7 @@ import { COPY, type Lang } from "../copy.ts";
 import { API, PUBLIC_API } from "../lib/api.ts";
 import type { Route } from "../lib/router.ts";
 import { Chat, type Ask } from "../chat/Chat.tsx";
-import { TopBar, Words } from "../Shell.tsx";
+import { SkipLink, TopBar, Words } from "../Shell.tsx";
 import { SERVICES_EN } from "../en.ts";
 import { setupLanding, type LandingControl } from "./motion.ts";
 import { Sky } from "./Sky.tsx";
@@ -82,13 +82,11 @@ export function Landing({ lang, onLang, route }: { lang: Lang; onLang: () => voi
 
   return (
     <div ref={root} className="landing">
-      <a href="#main" className="skip-link">
-        {c.nav.skip}
-      </a>
+      <SkipLink label={c.nav.skip} />
       <Sky />
       <TopBar lang={lang} onLang={onLang} route="" day={day} scrolled={scrolled} />
 
-      <main id="main">
+      <main id="main" tabIndex={-1}>
         <section className="l-hero l-night" aria-labelledby="l-hero-title">
           <div className="l-hero-inner">
             <div className="l-hero-mark">

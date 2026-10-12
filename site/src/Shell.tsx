@@ -26,6 +26,23 @@ export function Words({ text, late }: { text: string; late?: boolean }) {
   );
 }
 
+/** «پرش به محتوا»: focuses the page's main without touching the hash, which here is a page address
+ *  (#main would take the docs or keys back to the landing). */
+export function SkipLink({ label }: { label: string }) {
+  return (
+    <a
+      href="#main"
+      className="skip-link"
+      onClick={(e) => {
+        e.preventDefault();
+        document.getElementById("main")?.focus();
+      }}
+    >
+      {label}
+    </a>
+  );
+}
+
 /** The account's face: the Google picture, or the initials on a lapis tile. */
 export function Face({ me }: { me: Account }) {
   const name = me.user.name || me.user.email || "?";
@@ -119,9 +136,7 @@ export function Page({ lang, onLang, route, head, side, solo, late, children }: 
   }, [lang, route]);
   return (
     <div ref={root} className="landing l-page">
-      <a href="#main" className="skip-link">
-        {COPY[lang].nav.skip}
-      </a>
+      <SkipLink label={COPY[lang].nav.skip} />
       <Sky />
       <TopBar lang={lang} onLang={onLang} route={route} day={day} scrolled={scrolled} />
       <main id="main" tabIndex={-1}>

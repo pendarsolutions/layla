@@ -61,6 +61,10 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: clip;
 }
+/* A dialog's own scroll ends at its edge, never carrying on into the page behind. */
+dialog {
+  overscroll-behavior: contain;
+}
 
 /* ---------- The landing ---------- */
 .landing {
@@ -939,7 +943,7 @@ html.lenis body {
 .d-toc a:hover {
   color: var(--color-ink-default);
 }
-.d-toc a[aria-current="true"] {
+.d-toc a[aria-current="location"] {
   border-color: var(--color-product-500);
   color: var(--color-ink-default);
   font-weight: 800;
