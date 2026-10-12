@@ -15,7 +15,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, Request
 from fastapi.concurrency import run_in_threadpool
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from fastapi.staticfiles import StaticFiles
 
@@ -406,6 +406,13 @@ def create_app(settings: Optional[config.Settings] = None, engine=None, google=N
     app.include_router(build_router(s, accounts, sessions, google, limiter, client_ip, ApiError, ErrorResponse))
 
     if s.serve_web and WEB.exists():
+        # ?lang=en gets the English page (its own title, meta and prerendered landing), so search
+        # engines and link previews, which run no JavaScript, read English there.
+        @app.get("/", include_in_schema=False)
+        async def home(lang: Optional[str] = None):
+            english = WEB / "en.html"
+            return FileResponse(english if lang == "en" and english.exists() else WEB / "index.html")
+
         app.mount("/", StaticFiles(directory=WEB, html=True), name="web")
 
     return app
