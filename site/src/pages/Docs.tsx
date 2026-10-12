@@ -269,6 +269,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
             <p>{t(<>کلید را در سرآیند <C>Authorization</C> بفرستید. کلید با <C>lyl_</C> شروع می‌شود و فقط یک بار، هنگام ساختن، نشان داده می‌شود.</>, <>Send the key in the <C>Authorization</C> header. It starts with <C>lyl_</C> and is shown only once, when it's created.</>)}</p>
             <CodeBlock code="Authorization: Bearer lyl_..." label="Authorization" />
             <p>{t("کلیدی که باطل شود بی‌درنگ از کار می‌افتد. هر حساب تا پنج کلید فعال دارد.", "A revoked key stops working at once. Each account can hold up to five active keys.")}</p>
+            <p>{t(<>برای امتحان، کلید لازم نیست: لیلا درخواستِ بی <C>Authorization</C> را هم پاسخ می‌دهد، با سقف‌های کوچک‌تر (بخش «سهم و محدودیت‌ها»).</>, <>To try it, no key is needed: Layla also answers a request with no <C>Authorization</C> header, within smaller limits (see Quota and limits).</>)}</p>
           </S>
           <S id="request">
             <p>{t(<>بدنهٔ درخواست متن و فهرست خروجی‌هاست. هر خروجی یا یکی از خروجی‌های آماده است یا پرسش خود شما:</>, <>The body is the text and a list of outputs. Each output is either a ready-made one or a question of your own:</>)}</p>
@@ -325,6 +326,7 @@ export function Docs({ lang, onLang, route }: { lang: Lang; onLang: () => void; 
               <li>{t("هر حساب ۱۰۰ درخواست رایگان دارد. هر درخواست موفق، با هر تعداد خروجی، یکی حساب می‌شود؛ درخواستی که پاسخی نگیرد حساب نمی‌شود.", "Each account has 100 free requests. A successful request counts once, however many outputs it asks for; a request that gets no answer isn't counted.")}</li>
               <li>{t("نسخهٔ ویژه با سقف بیشتر به‌زودی می‌آید.", "A premium plan with a higher limit is coming.")}</li>
               <li>{t("هر درخواست حداکثر ۱۲ خروجی و ۲۰٬۰۰۰ نویسه متن.", "Each request takes at most 12 outputs and 20,000 characters of text.")}</li>
+              <li>{t("بی‌کلید: از هر نشانی ۳۰ درخواست در دقیقه، هر کدام حداکثر ۶ خروجی و ۴٬۰۰۰ نویسه متن.", "Without a key: 30 requests a minute from each address, each with at most 6 outputs and 4,000 characters of text.")}</li>
               <li>{t("هر خروجی یک بار خواندن متن است؛ خروجی کمتر یعنی پاسخ زودتر.", "Each output is one reading of the text; fewer outputs mean a faster answer.")}</li>
             </ul>
           </S>
